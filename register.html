@@ -1,0 +1,203 @@
+<!doctype html>
+
+<html lang="ja">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>道工具登録</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{font-family:-apple-system,sans-serif;background:#f5f5f5;margin:0}
+
+header{background:#111827;color:#fff;padding:18px;font-size:22px;font-weight:bold}
+
+.w{padding:14px;max-width:650px;margin:auto}
+
+.c{background:#fff;padding:16px;border-radius:15px;margin-bottom:12px}
+
+input,button{width:100%;padding:14px;font-size:17px;border-radius:10px;box-sizing:border-box;margin-top:8px}
+
+button{border:0;font-weight:bold}
+
+.b{background:#111827;color:white}
+
+.x{background:#e5e7eb}
+
+.item{padding:12px 0;border-bottom:1px solid #ddd}
+
+.small{color:#6b7280;font-size:14px;margin-top:4px}
+
+</style>
+
+</head>
+
+<body>
+
+<header>道工具登録</header>
+
+<div class="w">
+
+<div class="c">
+
+<h2>新しい道工具を登録</h2>
+
+<input id="no" placeholder="管理番号 例：T-002">
+
+<input id="name" placeholder="道工具名 例：ディスクグラインダー">
+
+<button class="b" onclick="addTool()">登録する</button>
+
+</div>
+
+<div class="c">
+
+<h2>登録済み道工具</h2>
+
+<div id="list">読み込み中...</div>
+
+<button class="x" onclick="loadTools()">更新</button>
+
+</div>
+
+</div>
+
+<script>
+
+const db=supabase.createClient(
+
+'https://bxbxroufwppcmswhoskp.supabase.co',
+
+'sb_publishable_slgq-RHBmjyF2TEys4j0fg_0t5YLSAA'
+
+);
+
+function esc(v){
+
+return String(v??'').replace(/[&<>'"]/g,s=>({
+
+'&':'&amp;',
+
+'<':'&lt;',
+
+'>':'&gt;',
+
+"'":'&#39;',
+
+'"':'&quot;'
+
+}[s]))
+
+}
+
+async function loadTools(){
+
+let r=await db
+
+.from('tools')
+
+.select('management_no,name')
+
+.order('management_no');
+
+if(r.error){
+
+list.textContent='読み込みに失敗しました：'+r.error.message;
+
+return;
+
+}
+
+list.innerHTML=r.data.length
+
+?r.data.map(t=>
+
+'<div class="item"><b>'+esc(t.name)+'</b><div class="small">'+esc(t.management_no)+'</div></div>'
+
+).join('')
+
+:'登録なし';
+
+}
+
+async function addTool(){
+
+let management_no=no.value.trim();
+
+let toolName=name.value.trim();
+
+if(!management_no || !toolName){
+
+alert('管理番号と道工具名を入力してください');
+
+return;
+
+}
+
+let check=await db
+
+.from('tools')
+
+.select('management_no')
+
+.eq('management_no',management_no);
+
+if(check.error){
+
+alert('確認に失敗しました：'+check.error.message);
+
+return;
+
+}
+
+if(check.data.length){
+
+alert('その管理番号はすでに登録されています');
+
+return;
+
+}
+
+let r=await db
+
+.from('tools')
+
+.insert({
+
+management_no:management_no,
+
+name:toolName
+
+});
+
+if(r.error){
+
+alert('登録に失敗しました：'+r.error.message);
+
+return;
+
+}
+
+alert('登録しました');
+
+no.value='';
+
+name.value='';
+
+loadTools();
+
+}
+
+loadTools();
+
+</script>
+
+</body>
+
+</html>
