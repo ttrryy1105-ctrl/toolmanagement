@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>資材カタログ</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    *{
+      box-sizing:border-box;
+    }
+
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;
+      background:#f4f6f8;
+      color:#111827;
+    }
+
+    header{
+      background:#111827;
+      color:white;
+      padding:18px 16px;
+      font-size:22px;
+      font-weight:900;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    header small{
+      font-size:13px;
+      color:#d1d5db;
+    }
+
+    .wrap{
+      max-width:800px;
+      margin:auto;
+      padding:14px;
+    }
+
+    .card{
+      background:white;
+      border-radius:16px;
+      padding:16px;
+      margin-bottom:14px;
+      box-shadow:0 1px 5px #00000012;
+    }
+
+    h2{
+      margin:0 0 14px;
+      font-size:20px;
+    }
+
+    label{
+      display:block;
+      font-size:14px;
+      font-weight:800;
+      margin:12px 0 6px;
+    }
+
+    select,
+    input{
+      width:100%;
+      padding:14px;
+      border:1px solid #d1d5db;
+      border-radius:12px;
+      background:white;
+      font-size:17px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+
+    .count{
+      margin-top:12px;
+      font-size:13px;
+      color:#6b7280;
+    }
+
+    .item{
+      padding:14px 0;
+      border-bottom:1px solid #e5e7eb;
+    }
+
+    .item:last-child{
+      border-bottom:none;
+    }
+
+    .name{
+      font-size:17px;
+      font-weight:900;
+    }
+
+    .spec{
+      margin-top:5px;
+      font-size:14px;
+      color:#6b7280;
+      line-height:1.5;
+    }
+
+    .stock{
+      float:right;
+      font-size:19px;
+      font-weight:900;
+      color:#0f766e;
+    }
+
+    .empty{
+      text-align:center;
+      padding:30px 10px;
+      color:#6b7280;
+    }
+
+    .loading{
+      text-align:center;
+      padding:40px;
+      font-weight:800;
+    }
+
+    .error{
+      background:#fef2f2;
+      color:#991b1b;
+      padding:12px;
+      border-radius:10px;
+      margin-bottom:12px;
+      display:none;
+    }
+
+    @media(max-width:500px){
+      .grid{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <span>資材カタログ</span>
+  <small>FIELD UP</small>
+</header>
+
+<div class="wrap">
+
+  <div id="error" class="error"></div>
+
+  <div class="card">
+    <h2>資材を探す</h2>
+
+    <label>ジャンル</label>
+    <select id="category">
+      <option value="">すべて</option>
+    </select>
+
+    <div class="grid">
+
+      <div>
+        <label>材質</label>
+        <select id="material">
+          <option value="">すべて</option>
+        </select>
+      </div>
+
+      <div>
+        <label>検索</label>
+        <input
+          id="search"
+          placeholder="例：エルボ、M16、25A"
+        >
+      </div>
+
+    </div>
+
+    <div id="count" class="count"></div>
+  </div>
+
+  <div class="card">
+    <h2>資材一覧</h2>
+    <div id="list" class="loading">読み込み中...</div>
+  </div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL =
+  "https://bxbxroufwppcmswhoskp.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_slgq-RHBmjyF2TEys4j0fg_0t5YLSAA";
+
+const db = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let items = [];
+
+const categorySelect =
+  document.getElementById("category");
+
+const materialSelect =
+  document.getElementById("material");
+
+const searchInput =
+  document.getElementById("search");
+
+const list =
+  document.getElementById("list");
+
+const count =
+  document.getElementById("count");
+
+const errorBox =
+  document.getElementById("error");
+
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+function unique(values){
+
+  return [
+    ...new Set(
+      values.filter(Boolean)
+    )
+  ];
+
+}
+
+
+function sortNatural(a,b){
+
+  return String(a).localeCompare(
+    String(b),
+    "ja",
+    {numeric:true}
+  );
+
+}
+
+
+async function loadAllItems(){
+
+  let all = [];
+
+  const pageSize = 1000;
+
+  let from = 0;
+
+  while(true){
+
+    const {data,error} =
+      await db
+        .from("material_items")
+        .select("*")
+        .eq("active",true)
+        .order("category")
+        .range(
+          from,
+          from + pageSize - 1
+        );
+
+    if(error){
+
+      errorBox.style.display =
+        "block";
+
+      errorBox.textContent =
+        "資材データを読み込めません：" +
+        error.message;
+
+      list.innerHTML =
+        '<div class="empty">読み込み失敗</div>';
+
+      return;
+
+    }
+
+    const batch =
+      data || [];
+
+    all =
+      all.concat(batch);
+
+    if(batch.length < pageSize){
+      break;
+    }
+
+    from += pageSize;
+
+  }
+
+  items = all;
+
+  buildFilters();
+
+  render();
+
+}
+
+
+function buildFilters(){
+
+  const categories =
+    unique(
+      items.map(
+        item => item.category
+      )
+    ).sort(sortNatural);
+
+  categories.forEach(category => {
+
+    const option =
+      document.createElement("option");
+
+    option.value =
+      category;
+
+    option.textContent =
+      category;
+
+    categorySelect.appendChild(option);
+
+  });
+
+
+  const materials =
+    unique(
+      items.map(
+        item => item.material
+      )
+    ).sort(sortNatural);
+
+  materials.forEach(material => {
+
+    const option =
+      document.createElement("option");
+
+    option.value =
+      material;
+
+    option.textContent =
+      material;
+
+    materialSelect.appendChild(option);
+
+  });
+
+}
+
+
+function buildSpec(item){
+
+  const parts = [];
+
+  if(item.material){
+    parts.push(item.material);
+  }
+
+  if(item.size){
+    parts.push(item.size);
+  }
+
+  if(item.secondary_size){
+    parts.push(
+      "→ " + item.secondary_size
+    );
+  }
+
+  if(item.specification){
+    parts.push(item.specification);
+  }
+
+  if(item.length_mm){
+    parts.push(
+      item.length_mm + "mm"
+    );
+  }
+
+  return parts.join(" / ");
+
+}
+
+
+function render(){
+
+  const category =
+    categorySelect.value;
+
+  const material =
+    materialSelect.value;
+
+  const search =
+    searchInput.value
+      .trim()
+      .toLowerCase();
+
+
+  let filtered =
+    items.filter(item => {
+
+      if(
+        category &&
+        item.category !== category
+      ){
+        return false;
+      }
+
+      if(
+        material &&
+        item.material !== material
+      ){
+        return false;
+      }
+
+      if(search){
+
+        const text = [
+          item.category,
+          item.item_name,
+          item.material,
+          item.size,
+          item.secondary_size,
+          item.specification,
+          item.length_mm
+        ]
+        .join(" ")
+        .toLowerCase();
+
+        if(!text.includes(search)){
+          return false;
+        }
+
+      }
+
+      return true;
+
+    });
+
+
+  filtered.sort((a,b) => {
+
+    return (
+      sortNatural(
+        a.category,
+        b.category
+      )
+      ||
+      sortNatural(
+        a.item_name,
+        b.item_name
+      )
+      ||
+      sortNatural(
+        a.size,
+        b.size
+      )
+    );
+
+  });
+
+
+  count.textContent =
+    "表示：" +
+    filtered.length +
+    "件 / 全" +
+    items.length +
+    "件";
+
+
+  if(filtered.length === 0){
+
+    list.innerHTML =
+      '<div class="empty">該当する資材がありません</div>';
+
+    return;
+
+  }
+
+
+  list.innerHTML =
+    filtered.map(item => {
+
+      return `
+        <div class="item">
+
+          <span class="stock">
+            ${item.stock ?? 0}${escapeHtml(item.unit ?? "")}
+          </span>
+
+          <div class="name">
+            ${escapeHtml(item.item_name)}
+          </div>
+
+          <div class="spec">
+            ${escapeHtml(item.category)}
+            <br>
+            ${escapeHtml(buildSpec(item))}
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+}
+
+
+categorySelect.addEventListener(
+  "change",
+  render
+);
+
+materialSelect.addEventListener(
+  "change",
+  render
+);
+
+searchInput.addEventListener(
+  "input",
+  render
+);
+
+
+loadAllItems();
+
+</script>
+
+</body>
+</html>
