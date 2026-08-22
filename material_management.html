@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>資材管理</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#f4f6f8; --card:#fff; --text:#111827; --muted:#6b7280;
+  --line:#e5e7eb; --primary:#0f766e; --danger:#b91c1c; --warn:#b45309;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text)}
+header{position:sticky;top:0;z-index:10;background:#111827;color:white;padding:16px 14px;font-size:21px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+header small{font-size:12px;font-weight:600;opacity:.75}
+.wrap{max-width:760px;margin:auto;padding:14px 14px 90px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.tab{border:0;background:#fff;padding:11px 5px;border-radius:12px;font-weight:800;font-size:13px;box-shadow:0 1px 3px #0001}
+.tab.active{background:#111827;color:#fff}
+.card{background:var(--card);border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 1px 5px #00000012}
+h2{font-size:18px;margin:0 0 12px}
+label{display:block;font-size:13px;font-weight:800;margin:10px 0 5px}
+select,input,textarea,button{font:inherit}
+select,input,textarea{width:100%;padding:13px;border:1px solid #d1d5db;border-radius:11px;background:white;font-size:16px}
+textarea{min-height:70px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;font-weight:900;font-size:16px}
+.btn.primary{background:var(--primary);color:#fff}
+.btn.use{background:#dc2626;color:#fff}
+.btn.in{background:#2563eb;color:#fff}
+.btn.ghost{background:#eef2f7;color:#111827}
+.btn:disabled{opacity:.45}
+.pills{display:flex;gap:8px;overflow:auto;padding-bottom:2px}
+.pill{white-space:nowrap;border:1px solid #d1d5db;background:white;border-radius:999px;padding:9px 13px;font-weight:800}
+.pill.active{background:#111827;color:white;border-color:#111827}
+.item{padding:12px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.name{font-weight:900}
+.spec{font-size:13px;color:var(--muted);margin-top:4px}
+.stock{font-weight:900;font-size:19px;white-space:nowrap}
+.low{color:var(--danger)}
+.ok{color:var(--primary)}
+.badge{display:inline-block;border-radius:999px;padding:3px 7px;font-size:11px;font-weight:900;margin-left:5px;background:#fee2e2;color:#991b1b}
+.search{margin-bottom:10px}
+.empty{text-align:center;color:var(--muted);padding:25px 10px}
+.history{font-size:14px;line-height:1.55}
+.history strong{font-size:15px}
+.notice{padding:10px 12px;border-radius:11px;background:#ecfeff;color:#155e75;font-size:13px;font-weight:700;margin-bottom:12px}
+.error{background:#fef2f2;color:#991b1b}
+.hidden{display:none!important}
+.modal-bg{position:fixed;inset:0;background:#0008;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:#fff;width:100%;max-width:760px;border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+.modal h3{margin:0 0 4px;font-size:20px}
+.close{float:right;border:0;background:#f3f4f6;border-radius:50%;width:36px;height:36px;font-weight:900}
+.bigstock{font-size:34px;font-weight:900;margin:8px 0}
+.segment{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:8px 0}
+.quick button{border:0;background:#eef2f7;padding:11px 4px;border-radius:10px;font-weight:900}
+footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:8px 14px calc(8px + env(safe-area-inset-bottom));font-size:12px;color:var(--muted);text-align:center}
+@media(max-width:420px){.tabs{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header><span>資材管理</span><small>FIELD UP</small></header>
+<div class="wrap">
+
+  <div id="msg" class="notice hidden"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="operate">入出庫</button>
+    <button class="tab" data-tab="stock">在庫一覧</button>
+    <button class="tab" data-tab="low">発注必要</button>
+    <button class="tab" data-tab="history">履歴</button>
+  </div>
+
+  <section id="operate">
+    <div class="card">
+      <h2>資材を選ぶ</h2>
+      <label>ジャンル</label>
+      <select id="category"></select>
+
+      <label>品名</label>
+      <select id="itemName"></select>
+
+      <div class="grid2">
+        <div>
+          <label>材質</label>
+          <select id="material"></select>
+        </div>
+        <div>
+          <label>サイズ</label>
+          <select id="size"></select>
+        </div>
+      </div>
+
+      <div id="secondaryWrap" class="hidden">
+        <label>二次側サイズ</label>
+        <select id="secondarySize"></select>
+      </div>
+
+      <div id="specWrap" class="hidden">
+        <label>規格</label>
+        <select id="specification"></select>
+      </div>
+
+      <div id="lengthWrap" class="hidden">
+        <label>長さ</label>
+        <select id="length"></select>
+      </div>
+
+      <button id="openAction" class="btn primary" style="margin-top:14px">この資材を開く</button>
+    </div>
+  </section>
+
+  <section id="stock" class="hidden">
+    <div class="card">
+      <h2>在庫一覧</h2>
+      <input id="stockSearch" class="search" placeholder="M16 / 25A / エルボ / SUS など">
+      <div class="pills" id="stockCats"></div>
+      <div id="stockList"></div>
+    </div>
+  </section>
+
+  <section id="low" class="hidden">
+    <div class="card">
+      <h2>発注必要</h2>
+      <div class="notice">最低在庫を1以上に設定した資材だけ判定します。</div>
+      <div id="lowList"></div>
+    </div>
+  </section>
+
+  <section id="history" class="hidden">
+    <div class="card">
+      <h2>入出庫履歴</h2>
+      <div id="historyList"></div>
+    </div>
+  </section>
+</div>
+
+<div id="modalBg" class="modal-bg hidden">
+  <div class="modal">
+    <button id="closeModal" class="close">×</button>
+    <h3 id="modalTitle"></h3>
+    <div id="modalSpec" class="spec"></div>
+    <div>現在庫</div>
+    <div class="bigstock"><span id="modalStock">0</span><span id="modalUnit" style="font-size:17px;margin-left:4px"></span></div>
+
+    <div class="segment">
+      <button id="modeUse" class="btn use">使用</button>
+      <button id="modeIn" class="btn ghost">納入</button>
+    </div>
+
+    <label>数量</label>
+    <input id="qty" type="number" min="1" inputmode="numeric" value="1">
+    <div class="quick">
+      <button data-q="1">1</button><button data-q="5">5</button><button data-q="10">10</button><button data-q="20">20</button>
+    </div>
+
+    <label>使用者</label>
+    <input id="userName" placeholder="名前">
+
+    <label>現場・工事名（任意）</label>
+    <input id="jobName" placeholder="○○現場">
+
+    <label>メモ（任意）</label>
+    <textarea id="note"></textarea>
+
+    <button id="saveAction" class="btn use" style="margin-top:14px">使用を登録</button>
+  </div>
+</div>
+
+<footer>QR読み込み対応・鉄 / SUS・在庫履歴保存</footer>
+
+<script>
+const SUPABASE_URL = "https://bxbxroufwppcmswhoskp.supabase.co";
+const SUPABASE_KEY = "sb_publishable_slgq-RHBmjyF2TEys4j0fg_0t5YLSAA";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allItems = [];
+let selectedItem = null;
+let actionMode = "使用";
+const $ = id => document.getElementById(id);
+
+function msg(text, error=false){
+  const el=$("msg"); el.textContent=text; el.className="notice"+(error?" error":"");
+  setTimeout(()=>el.classList.add("hidden"),3500);
+}
+function uniq(arr){ return [...new Set(arr.filter(v=>v!==null && v!==undefined && v!==""))]; }
+function naturalSort(a,b){ return String(a).localeCompare(String(b),"ja",{numeric:true}); }
+function fillSelect(el, values){
+  el.innerHTML="";
+  values.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;el.appendChild(o)});
+}
+function itemLabel(i){
+  const bits=[i.material,i.size];
+  if(i.secondary_size) bits.push("→"+i.secondary_size);
+  if(i.specification) bits.push(i.specification);
+  if(i.length_mm) bits.push(i.length_mm+"mm");
+  return bits.filter(Boolean).join(" / ");
+}
+async function loadItems(){
+  const {data,error}=await sb.from("material_items").select("*").eq("active",true).order("category");
+  if(error){msg("資材データを読み込めません: "+error.message,true);return}
+  allItems=data||[];
+  buildSelectors();
+  renderStock();
+  renderLow();
+  await handleQrParam();
+}
+function buildSelectors(){
+  const cats=uniq(allItems.map(x=>x.category)).sort(naturalSort);
+  fillSelect($("category"),cats);
+  refreshItemNames();
+}
+function matchesCurrent(exclude){
+  return allItems.filter(i=>{
+    if(exclude!=="category" && $("category").value && i.category!==$("category").value) return false;
+    if(exclude!=="itemName" && $("itemName").value && i.item_name!==$("itemName").value) return false;
+    if(exclude!=="material" && $("material").value && i.material!==$("material").value) return false;
+    if(exclude!=="size" && $("size").value && i.size!==$("size").value) return false;
+    if(exclude!=="secondarySize" && $("secondarySize").value && (i.secondary_size||"")!==$("secondarySize").value) return false;
+    if(exclude!=="specification" && $("specification").value && (i.specification||"")!==$("specification").value) return false;
+    if(exclude!=="length" && $("length").value && String(i.length_mm||"")!==$("length").value) return false;
+    return true;
+  });
+}
+function refreshItemNames(){
+  const arr=allItems.filter(i=>i.category===$("category").value);
+  fillSelect($("itemName"),uniq(arr.map(i=>i.item_name)).sort(naturalSort));
+  refreshMaterial();
+}
+function refreshMaterial(){
+  let arr=allItems.filter(i=>i.category===$("category").value && i.item_name===$("itemName").value);
+  fillSelect($("material"),uniq(arr.map(i=>i.material)).sort(naturalSort));
+  refreshSize();
+}
+function refreshSize(){
+  let arr=allItems.filter(i=>i.category===$("category").value && i.item_name===$("itemName").value && i.material===$("material").value);
+  fillSelect($("size"),uniq(arr.map(i=>i.size)).sort(naturalSort));
+  refreshSecondary();
+}
+function refreshSecondary(){
+  let arr=allItems.filter(i=>i.category===$("category").value && i.item_name===$("itemName").value && i.material===$("material").value && i.size===$("size").value);
+  const vals=uniq(arr.map(i=>i.secondary_size)).sort(naturalSort);
+  $("secondaryWrap").classList.toggle("hidden", vals.length===0);
+  fillSelect($("secondarySize"), vals);
+  refreshSpec();
+}
+function refreshSpec(){
+  let arr=allItems.filter(i=>i.category===$("category").value && i.item_name===$("itemName").value && i.material===$("material").value && i.size===$("size").value);
+  if(!$("secondaryWrap").classList.contains("hidden")) arr=arr.filter(i=>(i.secondary_size||"")===$("secondarySize").value);
+  const vals=uniq(arr.map(i=>i.specification)).sort(naturalSort);
+  $("specWrap").classList.toggle("hidden", vals.length===0);
+  fillSelect($("specification"), vals);
+  refreshLength();
+}
+function refreshLength(){
+  let arr=allItems.filter(i=>i.category===$("category").value && i.item_name===$("itemName").value && i.material===$("material").value && i.size===$("size").value);
+  if(!$("secondaryWrap").classList.contains("hidden")) arr=arr.filter(i=>(i.secondary_size||"")===$("secondarySize").value);
+  if(!$("specWrap").classList.contains("hidden")) arr=arr.filter(i=>(i.specification||"")===$("specification").value);
+  const vals=uniq(arr.map(i=>i.length_mm)).sort((a,b)=>a-b).map(String);
+  $("lengthWrap").classList.toggle("hidden", vals.length===0);
+  fillSelect($("length"), vals);
+}
+function getSelectedItem(){
+  const hits=allItems.filter(i=>{
+    if(i.category!==$("category").value) return false;
+    if(i.item_name!==$("itemName").value) return false;
+    if(i.material!==$("material").value) return false;
+    if(i.size!==$("size").value) return false;
+    if(!$("secondaryWrap").classList.contains("hidden") && (i.secondary_size||"")!==$("secondarySize").value) return false;
+    if(!$("specWrap").classList.contains("hidden") && (i.specification||"")!==$("specification").value) return false;
+    if(!$("lengthWrap").classList.contains("hidden") && String(i.length_mm||"")!==$("length").value) return false;
+    return true;
+  });
+  return hits[0]||null;
+}
+function openModal(item){
+  selectedItem=item;
+  $("modalTitle").textContent=item.item_name;
+  $("modalSpec").textContent=itemLabel(item);
+  $("modalStock").textContent=item.stock;
+  $("modalUnit").textContent=item.unit||"";
+  $("qty").value=1;
+  $("note").value="";
+  const saved=localStorage.getItem("material_user_name");
+  if(saved) $("userName").value=saved;
+  setMode("使用");
+  $("modalBg").classList.remove("hidden");
+}
+function setMode(mode){
+  actionMode=mode;
+  $("modeUse").className="btn "+(mode==="使用"?"use":"ghost");
+  $("modeIn").className="btn "+(mode==="入庫"?"in":"ghost");
+  $("saveAction").className="btn "+(mode==="使用"?"use":"in");
+  $("saveAction").textContent=mode+"を登録";
+}
+async function saveAction(){
+  if(!selectedItem) return;
+  const q=parseInt($("qty").value,10);
+  if(!q || q<1){msg("数量を入力してください",true);return}
+  const user=$("userName").value.trim();
+  if(!user){msg("使用者の名前を入力してください",true);return}
+  localStorage.setItem("material_user_name",user);
+  $("saveAction").disabled=true;
+  const {data,error}=await sb.rpc("adjust_material_stock",{
+    p_item_id:selectedItem.id,
+    p_action:actionMode,
+    p_quantity:q,
+    p_user_name:user,
+    p_job_name:$("jobName").value.trim()||null,
+    p_note:$("note").value.trim()||null
+  });
+  $("saveAction").disabled=false;
+  if(error){msg(error.message,true);return}
+  const row=Array.isArray(data)?data[0]:data;
+  const idx=allItems.findIndex(x=>x.id===selectedItem.id);
+  if(idx>=0) allItems[idx].stock=row.stock_after;
+  $("modalStock").textContent=row.stock_after;
+  selectedItem.stock=row.stock_after;
+  msg(actionMode+"を登録しました");
+  renderStock(); renderLow(); loadHistory();
+  setTimeout(()=>$("modalBg").classList.add("hidden"),500);
+}
+function renderStock(){
+  const q=($("stockSearch").value||"").trim().toLowerCase();
+  const activeCat=document.querySelector("#stockCats .pill.active")?.dataset.cat||"すべて";
+  let arr=allItems;
+  if(activeCat!=="すべて") arr=arr.filter(i=>i.category===activeCat);
+  if(q) arr=arr.filter(i=>[i.category,i.item_name,i.material,i.size,i.secondary_size,i.specification,i.length_mm].join(" ").toLowerCase().includes(q));
+  arr=arr.slice().sort((a,b)=>a.category.localeCompare(b.category,"ja")||a.item_name.localeCompare(b.item_name,"ja")||String(a.size).localeCompare(String(b.size),"ja",{numeric:true}));
+  $("stockList").innerHTML=arr.length?arr.map(i=>`
+    <div class="item" data-id="${i.id}">
+      <div class="item-top">
+        <div><div class="name">${escapeHtml(i.item_name)}</div><div class="spec">${escapeHtml(i.category)} / ${escapeHtml(itemLabel(i))}</div></div>
+        <div class="stock ${i.minimum_stock>0 && i.stock<=i.minimum_stock?'low':'ok'}">${i.stock}${escapeHtml(i.unit||"")}${i.minimum_stock>0 && i.stock<=i.minimum_stock?'<span class="badge">発注</span>':''}</div>
+      </div>
+    </div>`).join(""):'<div class="empty">該当する資材がありません</div>';
+  document.querySelectorAll("#stockList .item").forEach(el=>el.onclick=()=>openModal(allItems.find(x=>x.id==el.dataset.id)));
+}
+function buildStockCats(){
+  const cats=["すべて",...uniq(allItems.map(i=>i.category)).sort(naturalSort)];
+  $("stockCats").innerHTML=cats.map((c,n)=>`<button class="pill ${n===0?'active':''}" data-cat="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join("");
+  document.querySelectorAll("#stockCats .pill").forEach(b=>b.onclick=()=>{
+    document.querySelectorAll("#stockCats .pill").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active"); renderStock();
+  });
+}
+function renderLow(){
+  const arr=allItems.filter(i=>i.minimum_stock>0 && i.stock<=i.minimum_stock).sort((a,b)=>(a.stock-a.minimum_stock)-(b.stock-b.minimum_stock));
+  $("lowList").innerHTML=arr.length?arr.map(i=>`
+  <div class="item" data-id="${i.id}">
+    <div class="item-top">
+      <div><div class="name">${escapeHtml(i.item_name)}</div><div class="spec">${escapeHtml(itemLabel(i))}<br>最低在庫 ${i.minimum_stock}${escapeHtml(i.unit||"")} / 発注目安 ${i.order_quantity||0}${escapeHtml(i.unit||"")}</div></div>
+      <div class="stock low">${i.stock}${escapeHtml(i.unit||"")}</div>
+    </div>
+  </div>`).join(""):'<div class="empty">現在、発注必要の資材はありません</div>';
+  document.querySelectorAll("#lowList .item").forEach(el=>el.onclick=()=>openModal(allItems.find(x=>x.id==el.dataset.id)));
+}
+async function loadHistory(){
+  $("historyList").innerHTML='<div class="empty">読み込み中...</div>';
+  const {data,error}=await sb.from("material_history")
+    .select("id,action,quantity,stock_before,stock_after,user_name,job_name,note,created_at,material_items(item_name,material,size,secondary_size,specification,length_mm,unit)")
+    .order("created_at",{ascending:false}).limit(100);
+  if(error){$("historyList").innerHTML='<div class="empty">履歴を読み込めません</div>';return}
+  $("historyList").innerHTML=(data||[]).length?(data||[]).map(h=>{
+    const i=h.material_items||{};
+    const dt=new Date(h.created_at).toLocaleString("ja-JP");
+    const spec=[i.material,i.size,i.secondary_size?"→"+i.secondary_size:null,i.specification,i.length_mm?i.length_mm+"mm":null].filter(Boolean).join(" / ");
+    return `<div class="item history"><strong>${escapeHtml(h.action)} ${h.quantity}${escapeHtml(i.unit||"")}</strong>　${escapeHtml(i.item_name||"")}<br><span class="spec">${escapeHtml(spec)} / ${escapeHtml(h.user_name||"未入力")} / ${escapeHtml(dt)}${h.job_name?" / "+escapeHtml(h.job_name):""}<br>在庫 ${h.stock_before} → ${h.stock_after}</span></div>`;
+  }).join(""):'<div class="empty">履歴はまだありません</div>';
+}
+function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+async function handleQrParam(){
+  const qr=new URLSearchParams(location.search).get("qr");
+  if(!qr) return;
+  const {data,error}=await sb.from("material_qr").select("*").eq("qr_code",qr).eq("active",true).maybeSingle();
+  if(error || !data) return;
+  if(uniq(allItems.map(i=>i.category)).includes(data.category)){
+    $("category").value=data.category; refreshItemNames();
+    if([...$("itemName").options].some(o=>o.value===data.item_name)){$("itemName").value=data.item_name;refreshMaterial();}
+    if(data.fixed_size && [...$("size").options].some(o=>o.value===data.fixed_size)){$("size").value=data.fixed_size;refreshSecondary();}
+  }
+}
+$("category").onchange=refreshItemNames;
+$("itemName").onchange=refreshMaterial;
+$("material").onchange=refreshSize;
+$("size").onchange=refreshSecondary;
+$("secondarySize").onchange=refreshSpec;
+$("specification").onchange=refreshLength;
+$("openAction").onclick=()=>{const i=getSelectedItem();i?openModal(i):msg("資材が特定できません",true)};
+$("closeModal").onclick=()=>$("modalBg").classList.add("hidden");
+$("modalBg").onclick=e=>{if(e.target===$("modalBg"))$("modalBg").classList.add("hidden")};
+$("modeUse").onclick=()=>setMode("使用");
+$("modeIn").onclick=()=>setMode("入庫");
+$("saveAction").onclick=saveAction;
+document.querySelectorAll(".quick button").forEach(b=>b.onclick=()=>$("qty").value=b.dataset.q);
+$("stockSearch").oninput=renderStock;
+
+document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));t.classList.add("active");
+  ["operate","stock","low","history"].forEach(id=>$(id).classList.toggle("hidden",id!==t.dataset.tab));
+  if(t.dataset.tab==="stock") {buildStockCats();renderStock();}
+  if(t.dataset.tab==="history") loadHistory();
+  if(t.dataset.tab==="low") renderLow();
+});
+
+loadItems().then(buildStockCats);
+</script>
+</body>
+</html>
