@@ -158,8 +158,11 @@ footer{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px sol
       <button data-q="1">1</button><button data-q="5">5</button><button data-q="10">10</button><button data-q="20">20</button>
     </div>
 
-    <label>使用者</label>
-    <input id="userName" placeholder="名前">
+    <div id="userNameWrap">
+      <label>使用者</label>
+      <input id="userName" placeholder="名前（初回のみ）">
+    </div>
+    <div id="savedUserWrap" class="notice hidden" style="margin-top:10px"></div>
 
     <label>現場・工事名（任意）</label>
     <input id="jobName" placeholder="○○現場">
@@ -308,7 +311,16 @@ function openModal(item){
   $("qty").value=1;
   $("note").value="";
   const saved=localStorage.getItem("material_user_name");
-  if(saved) $("userName").value=saved;
+  if(saved){
+    $("userName").value=saved;
+    $("userNameWrap").classList.add("hidden");
+    $("savedUserWrap").textContent="使用者："+saved;
+    $("savedUserWrap").classList.remove("hidden");
+  }else{
+    $("userName").value="";
+    $("userNameWrap").classList.remove("hidden");
+    $("savedUserWrap").classList.add("hidden");
+  }
   setMode("使用");
   $("modalBg").classList.remove("hidden");
 }
@@ -396,14 +408,22 @@ async function loadHistory(){
 }
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 async function handleQrParam(){
-  const qr=new URLSearchParams(location.search).get("qr");
-  if(!qr) return;
+  const params=new URLSearchParams(location.search);
+  const qr=params.get("qr"), itemId=params.get("item");
+  if(!qr && !itemId) return;
+  if(itemId){
+    const item=allItems.find(i=>String(i.id)===String(itemId));
+    if(item){openModal(item);return;}
+  }
   const {data,error}=await sb.from("material_qr").select("*").eq("qr_code",qr).eq("active",true).maybeSingle();
-  if(error || !data) return;
+  if(error||!data){msg("QRに対応する資材が見つかりません",true);return;}
   if(uniq(allItems.map(i=>i.category)).includes(data.category)){
-    $("category").value=data.category; refreshItemNames();
+    $("category").value=data.category;refreshItemNames();
     if([...$("itemName").options].some(o=>o.value===data.item_name)){$("itemName").value=data.item_name;refreshMaterial();}
-    if(data.fixed_size && [...$("size").options].some(o=>o.value===data.fixed_size)){$("size").value=data.fixed_size;refreshSecondary();}
+    if(data.material&&[...$("material").options].some(o=>o.value===data.material)){$("material").value=data.material;refreshSize();}
+    if(data.fixed_size&&[...$("size").options].some(o=>o.value===data.fixed_size)){$("size").value=data.fixed_size;refreshSecondary();}
+    const hits=allItems.filter(i=>(!data.category||i.category===data.category)&&(!data.item_name||i.item_name===data.item_name)&&(!data.material||i.material===data.material)&&(!data.fixed_size||i.size===data.fixed_size));
+    if(hits.length===1)openModal(hits[0]);
   }
 }
 $("category").onchange=refreshItemNames;
