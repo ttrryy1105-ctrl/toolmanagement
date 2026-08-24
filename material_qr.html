@@ -109,33 +109,19 @@ const $=id=>document.getElementById(id);
 const uniq=a=>[...new Set(a.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"ja",{numeric:true}));
 
 async function init(){
-  let rows=[];
-  const pageSize=1000;
-  let from=0;
-
-  while(true){
-    const {data,error}=await sb
-      .from("material_items")
-      .select("*")
-      .eq("active",true)
-      .order("category")
-      .range(from,from+pageSize-1);
-
-    if(error){
-      $("status").textContent="読み込みエラー："+error.message;
-      return;
-    }
-
-    const batch=data||[];
-    rows=rows.concat(batch);
-
-    if(batch.length<pageSize) break;
-    from+=pageSize;
-  }
-
-  items=rows;
-  fillFilters();
-  clearResults();
+  $("category").innerHTML = `
+    <option value="">すべて</option>
+    <option>Uボルト</option>
+    <option>ねじ込み継手</option>
+    <option>フランジ</option>
+    <option>ボルト</option>
+    <option>差込み溶接継手</option>
+    <option>突合せ溶接継手</option>`;
+  $("material").innerHTML = `
+    <option value="">すべて</option>
+    <option>鉄</option>
+    <option>SUS</option>`;
+  $("status").textContent="条件を選んで「QRを表示」を押してください";
 }
 
 function fillFilters(){
@@ -143,11 +129,11 @@ function fillFilters(){
   $("material").innerHTML='<option value="">すべて</option>'+uniq(items.map(x=>x.material)).map(v=>`<option>${esc(v)}</option>`).join("");
 }
 
-function filtered(){
+function filtered(list=items){
   const c=$("category").value;
   const m=$("material").value;
   const q=$("search").value.trim().toLowerCase();
-  return items.filter(x=>{
+  return list.filter(x=>{
     if(c && x.category!==c) return false;
     if(m && x.material!==m) return false;
     if(q){
@@ -219,27 +205,40 @@ function makeLabel(x){
   return box;
 }
 
-function render(reset=true){
+async function render(reset=true){
   if(reset){
     const c=$("category").value;
     const m=$("material").value;
     const q=$("search").value.trim();
 
-    // 条件なしの全件QR生成を禁止
     if(!c && !m && !q){
       currentList=[];
       shown=0;
       $("qrgrid").innerHTML="";
-    updateSelectionBar();
+      updateSelectionBar();
       $("count").textContent="";
       $("status").textContent="ジャンル・材質・検索のどれかを指定してください";
       $("loadMoreBtn").classList.add("hidden");
       return;
     }
 
-    currentList=filtered();
-    shown=0;
+    $("status").textContent="検索中…";
     $("qrgrid").innerHTML="";
+    updateSelectionBar();
+
+    let query=sb.from("material_items").select("*").eq("active",true).limit(2000);
+    if(c) query=query.eq("category",c);
+    if(m) query=query.eq("material",m);
+
+    const {data,error}=await query;
+    if(error){
+      $("status").textContent="読み込みエラー："+error.message;
+      return;
+    }
+
+    items=data||[];
+    currentList=filtered(items);
+    shown=0;
   }
 
   $("count").textContent=`（${currentList.length}件）`;
@@ -265,7 +264,6 @@ function render(reset=true){
     $("status").textContent=`${shown}件すべて表示`;
   }
 }
-
 function clearResults(){
   currentList=[];
   shown=0;
