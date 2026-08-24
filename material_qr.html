@@ -135,7 +135,11 @@ function filtered(){
     if(c && x.category!==c) return false;
     if(m && x.material!==m) return false;
     if(q){
-      const hay=[x.category,x.item_name,x.material,x.size,x.secondary_size,x.secondary_size_unit,x.specification].filter(Boolean).join(" ").toLowerCase();
+      const hay=Object.values(x)
+        .filter(v=>v!==null && v!==undefined && (typeof v==="string" || typeof v==="number"))
+        .map(v=>String(v))
+        .join(" ")
+        .toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -147,14 +151,24 @@ function esc(s){
 }
 
 function detailParts(x){
-  const parts=[];
-  if(x.material) parts.push(x.material);
-  if(x.size) parts.push(x.size);
+  const raw=[];
+  if(x.material) raw.push(String(x.material));
+  if(x.size) raw.push(String(x.size));
   if(x.secondary_size){
-    parts.push(`${x.secondary_size}${x.secondary_size_unit||""}`);
+    raw.push(`${x.secondary_size}${x.secondary_size_unit||""}`);
   }
-  if(x.specification) parts.push(x.specification);
-  return parts;
+  if(x.specification) raw.push(String(x.specification));
+
+  // DB側で名称が違う場合にも主要な規格を拾う
+  const candidates=[
+    x.spec, x.standard, x.nominal_size, x.pipe_size,
+    x.pressure_class, x.class, x.rating
+  ];
+  candidates.forEach(v=>{
+    if(v!==null && v!==undefined && String(v).trim()) raw.push(String(v));
+  });
+
+  return [...new Set(raw.filter(Boolean))];
 }
 
 function makeLabel(x){
