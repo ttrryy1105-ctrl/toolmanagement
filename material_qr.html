@@ -75,6 +75,7 @@ button{border:0;font-weight:800;cursor:pointer}
     <h2>資材QR <span class="count" id="count"></span></h2>
     <div id="status" class="muted">読み込み中...</div>
     <div id="qrgrid" class="qrgrid"></div>
+    <button class="dark hidden" id="loadMoreBtn" style="margin-top:12px">次の50件を表示</button>
   </div>
 </div>
 
@@ -85,6 +86,9 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const BASE="https://ttrryy1105-ctrl.github.io/toolmanagement/material_management.html";
 
 let items=[];
+let currentList=[];
+let shown=0;
+const PAGE_SIZE=50;
 const $=id=>document.getElementById(id);
 const uniq=a=>[...new Set(a.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"ja",{numeric:true}));
 
@@ -115,7 +119,7 @@ async function init(){
 
   items=rows;
   fillFilters();
-  render();
+  clearResults();
 }
 
 function fillFilters(){
@@ -131,7 +135,7 @@ function filtered(){
     if(c && x.category!==c) return false;
     if(m && x.material!==m) return false;
     if(q){
-      const hay=[x.category,x.item_name,x.material,x.size,x.secondary_size,x.secondary_size_unit].filter(Boolean).join(" ").toLowerCase();
+      const hay=[x.category,x.item_name,x.material,x.size,x.secondary_size,x.secondary_size_unit,x.specification].filter(Boolean).join(" ").toLowerCase();
       if(!hay.includes(q)) return false;
     }
     return true;
@@ -142,42 +146,89 @@ function esc(s){
   return String(s??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 }
 
-function render(){
-  const list=filtered();
-  $("count").textContent=`（${list.length}件）`;
-  $("qrgrid").innerHTML="";
-  $("status").textContent=list.length ? "" : "該当する資材がありません";
-
-  list.forEach(x=>{
-    const box=document.createElement("div");
-    box.className="label";
-    const qr=document.createElement("div");
-    qr.className="qr";
-
-    const info=document.createElement("div");
-    const secondary=x.secondary_size ? ` / ${x.secondary_size}${x.secondary_size_unit||""}` : "";
-    info.innerHTML=
-      `<div class="name">${esc(x.item_name)}</div>`+
-      `<div class="meta">${esc(x.category)}<br>${esc(x.material||"-")} / ${esc(x.size||"-")}${esc(secondary)}</div>`;
-
-    box.appendChild(qr);
-    box.appendChild(info);
-    $("qrgrid").appendChild(box);
-
-    new QRCode(qr,{
-      text:`${BASE}?item=${encodeURIComponent(x.id)}`,
-      width:92,
-      height:92,
-      correctLevel:QRCode.CorrectLevel.M
-    });
-  });
+function detailParts(x){
+  const parts=[];
+  if(x.material) parts.push(x.material);
+  if(x.size) parts.push(x.size);
+  if(x.secondary_size){
+    parts.push(`${x.secondary_size}${x.secondary_size_unit||""}`);
+  }
+  if(x.specification) parts.push(x.specification);
+  return parts;
 }
 
-$("showBtn").onclick=render;
+function makeLabel(x){
+  const box=document.createElement("div");
+  box.className="label";
+
+  const qr=document.createElement("div");
+  qr.className="qr";
+
+  const info=document.createElement("div");
+  const details=detailParts(x);
+
+  info.innerHTML=
+    `<div class="name">${esc(x.item_name)}</div>`+
+    `<div class="meta">${esc(x.category)}<br>${esc(details.join(" / ") || "-")}</div>`;
+
+  box.appendChild(qr);
+  box.appendChild(info);
+
+  new QRCode(qr,{
+    text:`${BASE}?item=${encodeURIComponent(x.id)}`,
+    width:92,
+    height:92,
+    correctLevel:QRCode.CorrectLevel.M
+  });
+
+  return box;
+}
+
+function render(reset=true){
+  if(reset){
+    currentList=filtered();
+    shown=0;
+    $("qrgrid").innerHTML="";
+  }
+
+  $("count").textContent=`（${currentList.length}件）`;
+
+  if(!currentList.length){
+    $("status").textContent="該当する資材がありません";
+    $("loadMoreBtn").classList.add("hidden");
+    return;
+  }
+
+  const frag=document.createDocumentFragment();
+  const next=currentList.slice(shown,shown+PAGE_SIZE);
+  next.forEach(x=>frag.appendChild(makeLabel(x)));
+  $("qrgrid").appendChild(frag);
+  shown+=next.length;
+
+  if(shown < currentList.length){
+    $("loadMoreBtn").classList.remove("hidden");
+    $("loadMoreBtn").textContent=`次の${Math.min(PAGE_SIZE,currentList.length-shown)}件を表示`;
+    $("status").textContent=`${shown} / ${currentList.length}件を表示中`;
+  }else{
+    $("loadMoreBtn").classList.add("hidden");
+    $("status").textContent=`${shown}件すべて表示`;
+  }
+}
+
+function clearResults(){
+  currentList=[];
+  shown=0;
+  $("qrgrid").innerHTML="";
+  $("count").textContent="";
+  $("status").textContent="条件を選んで「QRを表示」を押してください";
+  $("loadMoreBtn").classList.add("hidden");
+}
+$("showBtn").onclick=()=>render(true);
 $("printBtn").onclick=()=>window.print();
-$("category").onchange=render;
-$("material").onchange=render;
-$("search").oninput=render;
+$("loadMoreBtn").onclick=()=>render(false);
+$("category").onchange=clearResults;
+$("material").onchange=clearResults;
+$("search").oninput=clearResults;
 
 init();
 </script>
