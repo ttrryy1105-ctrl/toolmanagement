@@ -89,14 +89,31 @@ const $=id=>document.getElementById(id);
 const uniq=a=>[...new Set(a.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"ja",{numeric:true}));
 
 async function init(){
-  const {data,error}=await sb.from("material_items")
-    .select("id,category,item_name,material,size,secondary_size,secondary_size_unit,unit")
-    .order("category").order("item_name").order("material").order("size");
-  if(error){
-    $("status").textContent="読み込みエラー："+error.message;
-    return;
+  let rows=[];
+  const pageSize=1000;
+  let from=0;
+
+  while(true){
+    const {data,error}=await sb
+      .from("material_items")
+      .select("*")
+      .eq("active",true)
+      .order("category")
+      .range(from,from+pageSize-1);
+
+    if(error){
+      $("status").textContent="読み込みエラー："+error.message;
+      return;
+    }
+
+    const batch=data||[];
+    rows=rows.concat(batch);
+
+    if(batch.length<pageSize) break;
+    from+=pageSize;
   }
-  items=data||[];
+
+  items=rows;
   fillFilters();
   render();
 }
