@@ -88,7 +88,7 @@ const BASE="https://ttrryy1105-ctrl.github.io/toolmanagement/material_management
 let items=[];
 let currentList=[];
 let shown=0;
-const PAGE_SIZE=50;
+const PAGE_SIZE=12;
 const $=id=>document.getElementById(id);
 const uniq=a=>[...new Set(a.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"ja",{numeric:true}));
 
@@ -200,6 +200,21 @@ function makeLabel(x){
 
 function render(reset=true){
   if(reset){
+    const c=$("category").value;
+    const m=$("material").value;
+    const q=$("search").value.trim();
+
+    // 条件なしの全件QR生成を禁止
+    if(!c && !m && !q){
+      currentList=[];
+      shown=0;
+      $("qrgrid").innerHTML="";
+      $("count").textContent="";
+      $("status").textContent="ジャンル・材質・検索のどれかを指定してください";
+      $("loadMoreBtn").classList.add("hidden");
+      return;
+    }
+
     currentList=filtered();
     shown=0;
     $("qrgrid").innerHTML="";
@@ -234,7 +249,7 @@ function clearResults(){
   shown=0;
   $("qrgrid").innerHTML="";
   $("count").textContent="";
-  $("status").textContent="条件を選んで「QRを表示」を押してください";
+  $("status").textContent="条件を選んで「QRを表示」を押してください（初期状態ではQRを読み込みません）";
   $("loadMoreBtn").classList.add("hidden");
 }
 $("showBtn").onclick=()=>render(true);
