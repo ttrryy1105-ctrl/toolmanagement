@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AMBI 消耗品管理</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#070b12;
+  --panel:#0e1622;
+  --panel2:#111c2b;
+  --blue:#1476ff;
+  --blue2:#0d5fd6;
+  --yellow:#ffd93d;
+  --text:#f7f9fc;
+  --muted:#9ca8b8;
+  --line:#21344d;
+  --danger:#8f2630;
+}
+body{
+  margin:0;background:
+  radial-gradient(circle at 80% 0%,rgba(20,118,255,.16),transparent 35%),
+  linear-gradient(180deg,#06101e 0%,var(--bg) 50%);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+header{
+  background:linear-gradient(180deg,rgba(7,17,31,.98),rgba(7,13,21,.96));
+  border-bottom:1px solid #1f3550;
+  padding:20px 16px 18px;
+}
+.brand{max-width:680px;margin:auto}
+.brandTop{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.logoImg{width:168px;max-width:48vw;height:auto;display:block}
+.title{font-size:27px;font-weight:950;margin-top:12px;letter-spacing:.02em}
+.subtitle{color:#76adff;font-size:11px;letter-spacing:1.8px;margin-top:3px}
+.userBar{
+  margin-top:15px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:#0d1724;border:1px solid #20364f;border-radius:12px;padding:11px 12px;
+}
+.userBar small{color:var(--muted)}
+.userName{font-weight:900;color:#fff}
+.userEdit{border:1px solid #315b8f;background:#10253f;color:#bcd8ff;border-radius:8px;padding:8px 10px;font-weight:800}
+.wrap{max-width:680px;margin:auto;padding:17px 14px 42px}
+.menuCard{
+  width:100%;min-height:110px;border:1px solid #20354f;border-radius:19px;
+  margin-bottom:14px;padding:18px 17px;text-align:left;color:#fff;
+  background:linear-gradient(135deg,#111b29,#0b131e);
+  box-shadow:inset 4px 0 0 var(--blue),0 9px 22px rgba(0,0,0,.18);
+}
+.menuCard.primary{
+  background:linear-gradient(135deg,#123c74,#0b2342);
+  border-color:#24578f;
+  box-shadow:inset 4px 0 0 var(--yellow),0 10px 24px rgba(0,0,0,.22);
+}
+.menuRow{display:flex;align-items:center;gap:14px}
+.menuIcon{
+  flex:0 0 50px;height:50px;border-radius:13px;display:grid;place-items:center;
+  background:#102c52;border:1px solid #285c98;font-size:25px;
+}
+.primary .menuIcon{background:#f6c935;color:#10151b;border:0}
+.menuText{min-width:0;flex:1}
+.menuTitle{font-size:21px;font-weight:950}
+.menuDesc{font-size:12px;color:#aeb9c7;margin-top:6px;line-height:1.45}
+.arrow{font-size:27px;color:#4c9cff}
+.primary .arrow{color:var(--yellow)}
+.notice{
+  margin-top:5px;border:1px solid #263950;background:#0b1420;border-radius:14px;
+  padding:13px;text-align:center;color:#9facba;font-size:12px;
+}
+.card{
+  background:linear-gradient(180deg,#111a27,#0b121c);
+  border:1px solid #263b55;border-radius:18px;padding:17px;margin-bottom:14px;
+}
+.hero{
+  background:linear-gradient(135deg,#173e72,#0c2340);
+  border-color:#2b5e9b;
+  box-shadow:inset 4px 0 0 var(--yellow);
+}
+h2,h3{margin-top:0}
+label{display:block;margin:16px 0 7px;color:#cbd6e3;font-size:14px;font-weight:800}
+input,select{
+  width:100%;height:53px;border:1px solid #34506f;border-radius:12px;
+  background:#070d15;color:#fff;font-size:17px;padding:0 13px;
+}
+.action{
+  width:100%;min-height:55px;margin-top:21px;border:0;border-radius:13px;
+  background:linear-gradient(135deg,var(--blue),var(--blue2));
+  color:#fff;font-size:18px;font-weight:950;
+  box-shadow:0 8px 18px rgba(20,118,255,.22);
+}
+.back{border:0;background:none;color:#6ba9ff;font-size:16px;font-weight:850;padding:4px 0 14px}
+.hide{display:none}
+.unit{color:var(--yellow);font-weight:900;margin-top:8px}
+.row{padding:14px 0;border-bottom:1px solid #24364c}
+.row:last-child{border-bottom:0}
+.itemName{font-size:17px;font-weight:900}
+.total{display:inline-block;color:#68a8ff;font-size:18px;font-weight:950;margin:5px 0}
+.tag{display:inline-block;background:#132945;color:#86b9ff;border-radius:7px;padding:4px 8px;font-size:12px}
+.deleteBtn{margin-top:11px;border:1px solid #bd4b57;background:#651f27;color:#fff;border-radius:9px;padding:9px 13px;font-weight:850}
+.empty{color:#9ba8b7;padding:10px 0}
+.projectTitle{color:var(--yellow);font-size:20px;font-weight:950;margin-bottom:8px}
+.footer{text-align:center;color:#536273;font-size:11px;margin-top:16px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="brandTop">
+      <img class="logoImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAADwCAYAAADmfBqxAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDcuMi1jMDAwIDc5LmRlZTNhNzcwMywgMjAyMi8wOC8xOC0xNjo1MDozMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIzLjUgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjk0QzFCMEVDQkZDQjExRUU4ODNEQ0U0QjRCNENCQUU5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjk0QzFCMEVEQkZDQjExRUU4ODNEQ0U0QjRCNENCQUU5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6OTRDMUIwRUFCRkNCMTFFRTg4M0RDRTRCNEI0Q0JBRTkiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6OTRDMUIwRUJCRkNCMTFFRTg4M0RDRTRCNEI0Q0JBRTkiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz7xKp4qAAAV8klEQVR42uydCZAV1bmAe5gBBGWVHQIoARSGAo0YUFAQgRkVie/5TMUkLs89lXqLVS+Vl5iXivUMCoILQtCAIoSIIM+IDDsUCKiAAZQdZN8ZZB/WWd7/c5vKeL23u2/f23d6+b6qU31h7tLndPfX55w+5/w5FRUVBgCAUo0iAACEAAAIAQAQAgA4QTsVnSQACAZlXzar/Yfnnxjq5jrPo/gAwiWD0rLcohlruua6+TxCAAiRDGQzY/rqbs1Onq11nj4EgIjLQFLfkfP6lbv9HoQAECIZfH2oydFDJ+p1QggAEZeB/ntoUeG2dL4PIQCERAZnL9Qo/3Rr++sQAkDEZaC8u/TWteUVOXUQAkDEZaC8s6RXnXS/GyEAhEAGK7Zfs+/U2SuuRQgAEZeB8vLMwoOZ+A2EABBwGRwrqX1h/b4WXRACQMRloIya329tRUVODYQAEHEZlFfkGNNW3tQ8U7+HEAACKgNl7tr8bedL81ogBICIy0B5Zc6Akkz+LkIACKgM9hxteHLPNw27IASAiMtAGT5r4BbZ5CAEgIjL4EJpnrFgfadrM70PCAEgYDJQ3l9+8/qy8moNEQJAxGWgvLmwT64X+4IQAAImg3V7Wx06WnLldQgBIOIyUIbNLNjj1T4hBIAAyeD0+ZqlX+xo2xkhAERcBspbC/vovIVaCAEg4jIQERiTPuvR0Mv9QwgAAZCBsmRLh11nL9Ro4/DtJQgBIKQyUIbPHHgshbdfRAgAIZXBoZN1S7Yeaprv9b4iBACfy0B5bU7/jUYWQi8iBACfy6CsvJoxY03X1tnYZ4QA4GMZKNNX3bCptCy3CUIAiLgMlJHz+pVla98RAoCPZbDtcJOjB0/U64wQACIuA2VYUcH2bOYBIQD4VAbnLlavWLqlQ0eEABBxGSjvLrn1q3SDtyIEgBDIQHl7Se+rsp0fhADgQxmsjAVvbYcQACIuA+XlWQUHqyJfCAHAZzLQ4K3r9rbsghAAIi4DZfSCOzIWvBUhAARYBhq89YMV3ZtXVR4RAoBPZKDMW9c5o8FbEQJAQGWgvJrh4K0IASCgMtDgrbuOXN0FIQBEXAbKCA+CtyIEgADK4GJZrjHfg+CtCAEgYDJQpngUvBUhAARMBsoYj4K3IgSAgMlg/b6Wh785fdV1CAEg4jJQhhUV7vZLOSAEQAZVKAMN3rpyR9tOCAEg4jJQxi66bV1FRU5thAAQcRkoE5fd0sBPZYIQABlUEUs2pxS8FSEAhFUGyvBZBUf9VjYIAZBBFXD4ZN0zWw427YIQAKpOBrroyAdVLQPltbl3bjCyELwVIQBYy6CwyvelvJrx8epurf1YTggBoiSDQX7Yn+mru2UteCtCAPCxDJSRc+8s82t5IQRABllk++HGWQ3eihAAfCoDZWhR4XY/lxtCAGSQJczgrR0QAkDEZaBMXHbL2vKKnLoIASDiMlDGLe59pd/LECEAMsgCf9/Rdv/Js7XaIQSAiMtAGTaz4EAQyhIhADLwmONnal9Yu7dVF4QAEHEZKFUZvBUhADLwERq8dery7s2CUq4IAZCBh8xf32n7+dK8lggBIOIyUF6ZPfBUkMoXIQAy8Ii9RxucqurgrQgBkIFPGDF74KagXWMIAZCBB2jw1nnrOrcLWlkjBEAGHjBleXdfBG9FCIAMfMCYhX1zg1jmCAGQQYbZsK9FsV+CtyIEQAZVzNCiu3YFtewRAiCDDGIGb70eIQBEXAaKGbz1SoQAEHEZKJM+7dkgyPuPEAAZZIilW9rvLjlfsw1CAIi4DJThswq+CXoeEAIggwxQfKrO2c0HmuUjBICIy0B5PRa8tTpCAIi4DDR460erbmgVhrwgBEAGaTJjTdfNpWW5TRECQMRlYDYXSsOSF4QAyCANthc3PnbgeP3OCAEg4jJQhhUVbgtTfhACIAOXaPDWJZs7tEcIABGXgWIGb62HEAAiLgNl3OLetcOWJ4QAyMAFq3a20eCt30cIABGXgTK0qPBAGPOFEAAZpMiJM7UCE7wVIQAy8JhRC/oFJngrQgBk4CEavPWDFTc1C2v+EAIggxRYsL7T9nMXq7dECAARl4HyyuwBp8KcP4QAyMAh+4/VP73zSKMuCAEg4jJQhs8q2Bj2awYhADJwgAZvnRvA4K0IAZCBB0xd0X1DEIO3IgRABh4wZmGfnCjkEyEAMrBh4/4WxUdO1bkeIQAyiLgMlKFFhbuikleEAMjAgpLzNctWbL/meoQAyCDiMlDGLr5tbZCDtyIEQAYZ5C/LetaPUn4RAiCDJJjBW9siBEAGYAyfNfCbqOUZIQAySEAseGvzfIQAyACMkSEJ3ooQABmkWybl1Yy/hSR4K0IAZJAmM9Z03RKW4K0IAZzKIFc2E5FBgubCvDsvRDXvCCG6Mpgg6QFK49vsPNLo+P5j9fMRAkRNBg9SGt9lWFHh11HOP0JABmCiwVsXb+rYHiEAMgBj0qc9Qxe8FSEAMnDJ2MW31Yp6GSAEZADCql1tDpw4U6s9QgBkANqZuJ9SQAjIAC4Fb/1qT6t8SgIhIAMwxizsu66iIqcmJYEQkEHEEREY7y+/uSklgRCQARjzQx68FSEgA2SQAq/OCXfwVoSADMAhGrx1R3G4g7ciBGQADhkxe+BGrgGEgAzgUvDWOWvz21ESCAEZgDFt5U2RCN6KEJABOGD0gr45lAJCQAZgbNrfPDLBW1MljyIIFrldD5aJFJ6Sl7+X1EhSE0k6sKax+bqJ+fry/2nKpeT+wbCZl4K3NqYkEEJYpHBaNl+byUmtolGcPBqZ20TyuDrMZafBWz/fdi21A4QQaYEckY2mTQ7kkWchD33dzBSHvm4uKVCBUN/5pJcGb+3GWYEQwJk8SmVz0ExOah9XpCAP3VbpJKIJS2+tz1FGCOCdQM7JZreZnAikjikKJ/JolMn+j2Vb2+8+HbHgrQgB/C4QnTugaasDeeRUEkPlWkgieei/LccVmMFbW3MUEAIEUx4Vsik200YHAqmerP/jfGlek80Hmt1PqSIEiI5ALsrmgJm+Q8fCnFGymWHWKiABDEyCyLB51mOrZNNd0mpKAyEAqBT2yaa3pI8oDYQAoFIokc0/SRpGaSAEAJVCuaRfycsnJF2kRBACgIphrGwKJB2nNBACgEphoWx6GA7nhiAEgPBLYbMphU8QAgCoFHQkY39J4xECAKgULkh6VF7+BiEAwGUxDJGNDnU+ixAAQKUwTTa3GQ6ngiMEgPBL4QvZ3CxpDUIAAJXCHiM23PljhAAAKgVdx/I+Sa8gBABQKZRJelZePi2pFCEAgIrhTdkUSjqBEABApTDfiI1s3I4QAECloMva/1DSUoQAACoFjXfRT9JfEAIAXBruLJuHJD0X9LywyGoC2jVr/EvZ3Jnkzy9tO1j8mUe/O8lIPRLSNNmfiRn4bQ2g8lcj9TgI4+T3P7b4Xo3DsCSNXTsjSVc40jvxfknrJK2Q31zvIo+6GvNbNm87LN/9pAsp6ArRL3QsHKfLy4+XVAshhEMGGonoeUkNkrxFV9f5F49+/m5J9VL8jK4gPDEDv327EVtWLFUW2fxdBdPVg+Ok05VflDRBLuByhx+rLWmwzXt2pVlbmCJS2CkvpxuxJeBpMgScH1vIQPmRnIx+Wsa7u+xPswx8z+CAHaeOkt6RtEDy76tIziKFFUZsuPNahBB8nnFQq3rcR/ur0Y0GZeB77gno8eojaaHZNPGTFDS03a2SZiKE4DYXNCrwDx289Ul5b66Pdv2eDOQ7yCHO8iWN9NtOiRQ0ZN29kl5HCMHkFw7f1ypDd+VMMUAu6nQ6se4NwbF7WMrgBh9KQYc7/7t5bpUhhODUDurK5qcpfORpH+2+doT2T+Pzg0JyGP/LrzsmUviTbO6SdBIhBOQOY8R6oVO5K7fz0f67uqglDy1kc1NIjuFgyU9tH0thrhEb7rzTr/vIY0f3d/wc8zN+uSsNkouhWgqP4DLS/5AhfmfExhdcLtd6lV7r2IFrJT0o6Sqb71EZaLNhmY+lsLFj4Tjtp/pQ0i0IwZ/NBX0G38nFRx+Vzz4nF+F5H2SjqXmnX5HqXdUH+75UynCRzTHSyM2fOajFdfazEEwpHBYp3CEv3zZFR5PBC6SQc7JUO7jM1ZIe8FOVOUUR6sV1h8VbfDPnX4TxlWzGOnhrwyCcqyIFvYn8TNLvEYI3Mqghm14uagdaJf3nNH76mSxmc12G+xEGGLEOyWTM9tlhXu7gPRVBOWd1uLMkHRX7E0nnEEJm+R9Jq118TgcZVbf4u10g0J4ila5ZyuMMw7qXuovsS9sUvs/uceMknx3jYw7eE7gVkkUKk82a2mGEkJnawSNavTXXvUuldqD5f8rmbTrgZYNPaglazZye5kVeOe93W7zlnCkgP/E9B+9ZEsRzWM5d7R/Rzsb1CCE9Gdwom2GGu5Fq+ly4tU318w1Jo2y+56dZHDo7JUPNBj35mlj8faa020/77HD/zE4Gss+BXcFIpLDTiD15mI0Q3MlAO5D+T9J4My5fptv/H8sJtkO2E2yq6vo47OdZyvZsm6pzH5GTkxmTduKY6pfjrDNQJb1qxJZCt+IPQb/ByXms59k9Dm5CnpAXYBnoXIL3JOlMvxEuTjJtaxfavO3SQdE7pbx/vLz8Nxu5jPY637IvF2Vf9Bn2v1oc04EOahKDfdRc+LXk6ZEE/68dnir9Hxj2Tw8+lLJZEIYmsA53ls0v5RzfaMTmQWTtxh3kGoLeDQaYtYMDLj6vfQdWjyl1vbx5lf79hmHdg50vJ3XvLOV9ahoXu8pQB/p08lFzQQX2cIKkU9H7O5CBBlL5hREy5LzWG5L285xCCNa1Az3hf2vEJou85KJ2oI8oH7OrHchFUVHpzqwr4cyx+Uy25jeoqIot/l4oebSq/d2bpnD8xF7NrxyfUMZfFCnMNvsVdiGExDLoYLbplfekwHa4+Bodd2C1qIYa+d0E/2/XcXm/Oa7B62ZDmdl3kgxd4KWXSyHocmXTA3I6fCnpRjfLqQVMCjr+RDuBP0cI35bBVeaFUNesvg9x+VV2nYnj5SRLVE1TW39t8TmteTyapeKw6yO4N0ntqL5h3Tk3Q/J+JiCnhI7/KJI89TBCjkjhkGz6SpqMEP7BOCM2Vl2ZLoW0IdUvkJMn37DvrR6V5M6sE4fsOg6fMp/xe80iSVZ9J8meIuij1ryQNBeU7pKWSZn/OgJS0M5enfvwfOSFILUDjalXed7ACy6/yq6dP0cu/M0Wf3/brFYn4xpJBVloNqicplm85ftykSTqOLzHprkwM4DXip7HQyS/L0RACjrcWec/6JiMC5EUgsigj2yGVvqveVIoK13UDrTJ8ZCb2kGlC1Hj+dkF5cjWyMX3bf4+KC7/1c0aglVz4WyAr5ffSB4fNCKAnP86rFyHOxdHSggig5bmiV95DcM/uvw6PVmsRhTqKLciB99j17l4l5yYbbJQPDrNd08K/QjaVKrnw+bCoyKinMrJiM0v0Q5aXd/gESM25sTJNPPX/bbgqodS0OOvnY0bM/WdeT6XQQ2zWly55/5zKYhFLr/S7ln13/UikhPKyXftMJsHyUSrwT5+63GzoUL2VS/iZ5O8pYcuUS7vK04iCN82F2SfS827n6Y1kt41V3d606bZo1PSNdDOkIhIYYdcJz2NWCfzgLDXEF4zvrsKsqt2opxMWmh2sxI1AMuHDtM1Nt/1mDnewWum2Bzfuy1qDJX5yO/NBdk/jdz0I0l2IxIfNiKESOGE2RT8U2iFYM5gjO8A/NJhlb4q2/WX0RWM7svCRbLcsA5JPtgUYmcbiU0OwslvjsH4ld3pI/m9LmJS0NWdtQb8H5LKQyUEcwZjItu9aMbQS7V2UFUrG2VLQlZt//5m3Ear4cw6oWZugM5/XffCbm2EnkYEkevjNbMmeCoUQqg0gzF+JZ9thv1gnGToYKGaVZCd25M8+ss0Vk8bNHhsP5t293SfrAvpuO/EsF8IpZsRUUQKWot+KPBCqDSDsU2S2kHKVSG5IHOMqo2h8HQWLhC9Y1qNndBVoXq47IfwK1fY/L2JEWHkWjnm5nN+e8pweQZjPPpobYLL79TZclbxE3RW37Q09rmuTV+BRhT6b7loS7LQbHguyd/uC1Fz4fLisHah52oZEFwhVJrBmIgRYjy3o7LsHjVOlov1iTROTq1laWDPlhbC0EU0x3pchJMthGCEpblgcr/x7XEpibjA5R3QJkPcDMZ4dCWkt1xerN8z7AORTEhn380hxHYjFz2fq2/O+Fvn4qPvBax2oH1MTgambeHyDqAQ4mYwJqsduJ1997jNnUQHFy3NQDbspHKDnMg3Z6E4U+0L0HbmvADJoL0RG4PQ0sHbP+fyDmYNofIMxnh0wMVolyePDn21awpMqLwIShp3Z511+UVV1xIM+7kN8eiyYxd9LIBcSa0l3SdJ16fQWpCTpwclhv3gJfBbH0KCGYzxjJHawXGXX6/PYpvbvGdiBrOjtQSroKk/lpP6WbkAj3rYbNgiv7FKXt7o8CN+meo82lxEtTL6FMHto+LxAZ+kFb0aQoIZjPHo3O8RafyE3R15mZw02zKYJW2LW4U+0xM8G0NqnV7kx3x0F9UnAvXiklsZ6EjGl7m0AySEJDMY4/mzBsV0WdXsaFjHLHTS7k/17nzEsB9W/Yw5LsIPzQZfNxfS4A3J104u7YAIIckMxngupml5uyHD5120t502G6zQTrF+XpavGUfCSQzEqSE8n3W8yu+4rINVQ0g0gzGeSVI72O2ydqCDVuyGbX5kLnSSaYoM+zH22ZjfYHexHzHC1+mmfQYPJFkLE/wohCQzGONJZ/FURdfyb5DN5kKlu7PWPOxmDQ425/V7yWTDOobEtJA1F3SsSoHkiUeNQRGCxQzG79zdpHaQzqASuzuw9kvM8TCrdrLRfpMnPW427DNiqymFvbmgUtMFU/Ilz59wOQdECBYzGBPxotvfkTuvhvzqbvO2v5qr8Xh1MepdaqvN2x63CaSSCZINUtIViBYF7DzVcQXaxNNm5ApTujrGpJWU99NhDdJSFeRlQQZWMxjjmSW1g9Vp/Nw6B82FbMQc0MEzdqslJZq5qWVk9RTiXAr7oLWxROMsSs1FRpxiV552z/tPOPiOhMdJ9jPT8xF2O9iX8igLIaeiwtlAvZycHLdC+F/D+dqCvcyFIwEggzi+zr0UgjmD8W8O3/6JyOB2Dh1A1QnBsz4EmxmMiRjCYQMIYZPBnMGonWudHX5kldQOfsDhAAhnDWFcCjJQ/sghA6h6Mi4EBzMY49GoMx9yKABCJgQHMxgT8ZKbxVMBwMdCcDiDMR59LjyJwwDgD/IyJAMnMxgToZ/Jl89zJAC8ZU3WhGA4m8GYiP80EwB4i6PHhGk3GRzOYASAsPchpDCDEQDCLIQUZzACQFiFkOIMRgAIeQ0hWQxGAIiSEGxiMAJAVITgYgYjAIRRCA5iMAJAhGoIqc5gBICA4Xg9BACghgAACAEAEAIAIAQAAOX/BRgAWc7zgWKHp3MAAAAASUVORK5CYII=" alt="AMBI">
+    </div>
+    <div class="title">消耗品管理</div>
+    <div class="subtitle">CONSUMABLES MANAGEMENT</div>
+    <div class="userBar">
+      <div><small>使用者</small><br><span class="userName" id="userName">---</span></div>
+      <button class="userEdit" onclick="changeUser()">名前変更</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section id="menu">
+  <button class="menuCard primary" onclick="openUse()">
+    <div class="menuRow">
+      <div class="menuIcon">▣</div>
+      <div class="menuText">
+        <div class="menuTitle">消耗品を使用</div>
+        <div class="menuDesc">QRコードまたは一覧から使用登録</div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+  </button>
+
+  <button class="menuCard" onclick="openHistory()">
+    <div class="menuRow">
+      <div class="menuIcon">▤</div>
+      <div class="menuText">
+        <div class="menuTitle">使用履歴</div>
+        <div class="menuDesc">誰が・いつ・何を・どの案件で使ったかを確認</div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+  </button>
+
+  <button class="menuCard" onclick="openProject()">
+    <div class="menuRow">
+      <div class="menuIcon">▥</div>
+      <div class="menuText">
+        <div class="menuTitle">案件別使用量</div>
+        <div class="menuDesc">案件ごとの消耗品使用量を集計</div>
+      </div>
+      <div class="arrow">›</div>
+    </div>
+  </button>
+
+  <div class="notice">ⓘ 在庫の確認は目視にて行ってください</div>
+  <div class="footer">AMBI INTERNAL SYSTEM</div>
+</section>
+
+<section id="use" class="hide">
+  <button class="back" onclick="showMenu()">← メニューへ戻る</button>
+  <div class="card hero">
+    <h2>消耗品を使用</h2>
+    QRコードから開いた場合は消耗品が自動選択されます
+  </div>
+  <div class="card">
+    <label>消耗品名</label>
+    <select id="consumable"></select>
+
+    <label>使用量</label>
+    <input id="quantity" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="使用量を入力">
+    <div id="unitDisplay" class="unit"></div>
+
+    <label>案件番号</label>
+    <input id="projectNumber" list="projectList" placeholder="案件番号を入力">
+    <datalist id="projectList"></datalist>
+
+    <label>日付</label>
+    <input id="usedDate" type="date">
+
+    <button class="action" onclick="registerUse()">使用登録</button>
+  </div>
+</section>
+
+<section id="history" class="hide">
+  <button class="back" onclick="showMenu()">← メニューへ戻る</button>
+  <div class="card">
+    <h2>使用履歴</h2>
+    <div id="historyList">読み込み中...</div>
+  </div>
+</section>
+
+<section id="project" class="hide">
+  <button class="back" onclick="showMenu()">← メニューへ戻る</button>
+  <div class="card">
+    <h2>案件別使用量</h2>
+    <label>案件番号</label>
+    <input id="projectSearch" list="projectList2" placeholder="案件番号を入力または選択">
+    <datalist id="projectList2"></datalist>
+    <button class="action" onclick="loadProjectUsage()">表示する</button>
+  </div>
+  <div class="card">
+    <div id="projectResult" class="empty">案件番号を選択してください</div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const db = supabase.createClient(
+  'https://bxbxroufwppcmswhoskp.supabase.co',
+  'sb_publishable_slgq-RHBmjyF2TEys4j0fg_0t5YLSAA'
+);
+
+let consumables = [];
+
+function getUser(){
+  let name=localStorage.getItem('ambi_consumable_user');
+  if(!name){
+    name=prompt('使用者の名前を入力してください');
+    if(name&&name.trim()){
+      name=name.trim();
+      localStorage.setItem('ambi_consumable_user',name);
+    }
+  }
+  document.getElementById('userName').textContent=name||'未設定';
+  return name;
+}
+
+function changeUser(){
+  const current=localStorage.getItem('ambi_consumable_user')||'';
+  const name=prompt('使用者名を入力してください',current);
+  if(!name||!name.trim()) return;
+  localStorage.setItem('ambi_consumable_user',name.trim());
+  document.getElementById('userName').textContent=name.trim();
+}
+
+function hideAll(){
+  ['menu','use','history','project'].forEach(id=>document.getElementById(id).classList.add('hide'));
+}
+function showMenu(){hideAll();document.getElementById('menu').classList.remove('hide')}
+function openUse(){hideAll();document.getElementById('use').classList.remove('hide')}
+async function openHistory(){hideAll();document.getElementById('history').classList.remove('hide');await loadHistory()}
+async function openProject(){hideAll();document.getElementById('project').classList.remove('hide');await loadProjects()}
+
+async function loadConsumables(){
+  const {data,error}=await db.from('consumables').select('*').eq('active',true).order('category').order('name');
+  if(error){alert('消耗品の読み込みに失敗しました\n'+error.message);return}
+  consumables=data||[];
+  const select=document.getElementById('consumable');
+  select.innerHTML='<option value="">選択してください</option>';
+  consumables.forEach(c=>{
+    const o=document.createElement('option');o.value=c.id;o.textContent=c.name;select.appendChild(o);
+  });
+  select.onchange=showUnit;
+  const params=new URLSearchParams(location.search);
+  const itemId=params.get('item');
+  if(itemId){select.value=itemId;showUnit();openUse()}
+}
+
+function showUnit(){
+  const id=Number(document.getElementById('consumable').value);
+  const item=consumables.find(x=>Number(x.id)===id);
+  document.getElementById('unitDisplay').textContent=item?'単位：'+item.unit:'';
+}
+
+async function loadProjects(){
+  const {data,error}=await db.from('consumable_projects').select('*').order('last_used_at',{ascending:false});
+  if(error)return;
+  [document.getElementById('projectList'),document.getElementById('projectList2')].forEach(list=>{
+    list.innerHTML='';
+    (data||[]).forEach(p=>{const o=document.createElement('option');o.value=p.project_number;list.appendChild(o)});
+  });
+}
+
+async function registerUse(){
+  const user=getUser();
+  const consumableId=Number(document.getElementById('consumable').value);
+  const quantity=Number(document.getElementById('quantity').value);
+  const project=document.getElementById('projectNumber').value.trim();
+  const date=document.getElementById('usedDate').value;
+
+  if(!user){alert('使用者名を入力してください');return}
+  if(!consumableId){alert('消耗品を選択してください');return}
+  if(!quantity||quantity<=0){alert('使用量を入力してください');return}
+  if(!project){alert('案件番号を入力してください');return}
+  if(!date){alert('日付を入力してください');return}
+
+  const {error}=await db.from('consumable_usage').insert({
+    user_name:user,consumable_id:consumableId,quantity,project_number:project,used_date:date
+  });
+  if(error){alert('登録に失敗しました\n'+error.message);return}
+
+  await db.from('consumable_projects').upsert({
+    project_number:project,last_used_at:new Date().toISOString()
+  },{onConflict:'project_number'});
+
+  alert('登録しました！');
+  document.getElementById('quantity').value='';
+  await loadProjects();
+}
+
+async function loadHistory(){
+  const box=document.getElementById('historyList');
+  box.textContent='読み込み中...';
+
+  const {data,error}=await db.from('consumable_usage').select(`
+    id,user_name,quantity,project_number,used_date,created_at,
+    consumables(name,unit)
+  `).order('created_at',{ascending:false}).limit(200);
+
+  if(error){box.textContent='履歴の読み込みに失敗しました';return}
+  if(!data||!data.length){box.innerHTML='<div class="empty">まだ使用履歴はありません</div>';return}
+
+  box.innerHTML='';
+  data.forEach(r=>{
+    const row=document.createElement('div');row.className='row';
+    row.innerHTML=
+      '<div class="itemName">'+escapeHtml(r.consumables?.name||'不明')+'</div>'+
+      '<div class="total">'+escapeHtml(r.quantity)+' '+escapeHtml(r.consumables?.unit||'')+'</div><br>'+
+      '<span class="tag">'+escapeHtml(r.project_number)+'</span> '+escapeHtml(r.used_date)+
+      '<br><small>使用者：'+escapeHtml(r.user_name)+'</small><br>'+
+      '<button class="deleteBtn" onclick="deleteUsage('+Number(r.id)+')">🗑 間違い登録を削除</button>';
+    box.appendChild(row);
+  });
+}
+
+async function deleteUsage(id){
+  if(!confirm('この使用履歴を削除しますか？\n\n間違い登録の場合のみ削除してください。'))return;
+  const {error}=await db.from('consumable_usage').delete().eq('id',id);
+  if(error){alert('削除に失敗しました\n'+error.message);return}
+  alert('削除しました');
+  await loadHistory();
+}
+
+async function loadProjectUsage(){
+  const project=document.getElementById('projectSearch').value.trim();
+  const box=document.getElementById('projectResult');
+  if(!project){alert('案件番号を入力してください');return}
+  box.textContent='集計中...';
+
+  const {data,error}=await db.from('consumable_usage').select(`
+    quantity,consumables(name,unit)
+  `).eq('project_number',project);
+
+  if(error){box.textContent='読み込みに失敗しました';return}
+  if(!data||!data.length){box.innerHTML='<div class="empty">この案件の使用履歴はありません</div>';return}
+
+  const totals={};
+  data.forEach(r=>{
+    const name=r.consumables?.name||'不明';
+    const unit=r.consumables?.unit||'';
+    const key=name+'|'+unit;
+    if(!totals[key])totals[key]={name,unit,quantity:0};
+    totals[key].quantity+=Number(r.quantity);
+  });
+
+  box.innerHTML='<div class="projectTitle">案件：'+escapeHtml(project)+'</div>';
+  Object.values(totals).forEach(t=>{
+    const row=document.createElement('div');row.className='row';
+    row.innerHTML='<div class="itemName">'+escapeHtml(t.name)+'</div>'+
+                  '<div class="total">'+escapeHtml(t.quantity)+' '+escapeHtml(t.unit)+'</div>';
+    box.appendChild(row);
+  });
+}
+
+function escapeHtml(v){
+  return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
+}
+
+async function init(){
+  getUser();
+  document.getElementById('usedDate').value=new Date().toISOString().slice(0,10);
+  await loadConsumables();
+  await loadProjects();
+}
+init();
+</script>
+
+</body>
+</html>
