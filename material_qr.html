@@ -285,10 +285,19 @@ $("clearSelected").onclick=()=>{
 
 $("printSelected").onclick=()=>{
   const selected=[...document.querySelectorAll(".label.selected")];
-  if(!selected.length){ alert("印刷するQRを選んでください"); return; }
+  if(!selected.length){
+    alert("印刷するQRを選んでください");
+    return;
+  }
+
   document.body.classList.add("selection-print");
+
+  const cleanup=()=>{
+    document.body.classList.remove("selection-print");
+  };
+
+  window.addEventListener("afterprint", cleanup, {once:true});
   window.print();
-  setTimeout(()=>document.body.classList.remove("selection-print"),500);
 };
 
 $("showBtn").onclick=()=>render(true);
