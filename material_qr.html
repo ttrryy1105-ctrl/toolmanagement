@@ -59,6 +59,35 @@ button{border:0;font-weight:800;cursor:pointer}
 .selection-bar{position:sticky;bottom:10px;z-index:40;display:none;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:14px;padding:12px;border-radius:14px;background:#111827;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.22)}
 .selection-bar.show{display:grid}.selection-count{font-weight:900}.selection-actions{display:flex;gap:8px}.selection-actions button{width:auto;padding:10px 14px;border-radius:10px;border:0;font-weight:900}.print-selected{background:#0f766e;color:#fff}.clear-selected{background:#e5e7eb;color:#111827}.label{position:relative;cursor:pointer;transition:.15s}.label.selected{border:3px solid #0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.13)}.label.selected::after{content:"✓";position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#0f766e;color:#fff;font-size:18px;font-weight:900}.select-hint{font-size:13px;color:#6b7280;margin:6px 0 10px}
 @media print{body.selection-print .controls,body.selection-print header,body.selection-print .muted,body.selection-print .select-hint,body.selection-print .selection-bar{display:none!important}body.selection-print .label{display:none!important}body.selection-print .label.selected{display:grid!important;border:1px solid #777!important;box-shadow:none!important}body.selection-print .label.selected::after{display:none!important}}
+
+.print-preview-screen{display:none}
+body.print-preview-mode header,
+body.print-preview-mode .wrap{display:none!important}
+body.print-preview-mode .print-preview-screen{display:block!important;background:#fff;min-height:100vh;padding:14px}
+.print-preview-toolbar{position:sticky;top:0;z-index:50;background:#fff;padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid #ddd}
+.print-preview-toolbar button{margin:0 0 8px;width:100%;padding:14px;border:0;border-radius:12px;font-size:17px;font-weight:900}
+.print-now{background:#111827;color:#fff}
+.print-back{background:#e5e7eb;color:#111827}
+.print-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.print-card{border:1px solid #cfd5dc;border-radius:12px;padding:10px;display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;align-items:center;break-inside:avoid}
+.print-card img{width:92px;height:92px;object-fit:contain}
+.print-card .name{font-weight:900;font-size:15px;line-height:1.2;word-break:keep-all}
+.print-card .meta{font-size:12px;color:#4b5563;margin-top:5px;line-height:1.35}
+@media(max-width:600px){.print-preview-grid{grid-template-columns:1fr}}
+@media print{
+  body.print-preview-mode .print-preview-toolbar{display:none!important}
+  body.print-preview-mode .print-preview-screen{display:block!important;padding:0}
+  body.print-preview-mode .print-preview-grid{grid-template-columns:repeat(2,1fr);gap:4mm}
+  body.print-preview-mode .print-card{
+    border:1px solid #777;border-radius:0;padding:4mm;
+    grid-template-columns:30mm minmax(0,1fr);min-height:40mm;align-items:center
+  }
+  body.print-preview-mode .print-card img{width:30mm;height:30mm}
+  body.print-preview-mode .print-card .name{font-size:12pt;line-height:1.15;word-break:keep-all}
+  body.print-preview-mode .print-card .meta{font-size:9pt;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+  @page{size:A4 portrait;margin:8mm}
+}
+
 </style>
 </head>
 <body>
@@ -93,6 +122,16 @@ button{border:0;font-weight:800;cursor:pointer}
     <div id="qrgrid" class="qrgrid"></div><div id="selectionBar" class="selection-bar"><div class="selection-count"><span id="selectedCount">0</span>件選択中</div><div class="selection-actions"><button type="button" id="clearSelected" class="clear-selected">解除</button><button type="button" id="printSelected" class="print-selected">選択分を印刷</button></div></div>
     <button class="dark hidden" id="loadMoreBtn" style="margin-top:12px">次の50件を表示</button>
   </div>
+</div>
+
+
+<div id="printPreviewScreen" class="print-preview-screen">
+  <div class="print-preview-toolbar">
+    <button type="button" id="printNowBtn" class="print-now">印刷・PDF保存</button>
+    <button type="button" id="printBackBtn" class="print-back">QR選択に戻る</button>
+    <div id="printPreviewCount" class="muted"></div>
+  </div>
+  <div id="printPreviewGrid" class="print-preview-grid"></div>
 </div>
 
 <script>
@@ -306,79 +345,52 @@ $("printSelected").onclick=()=>{
     return;
   }
 
-  const win=window.open("","_blank");
-  if(!win){
-    alert("印刷ページを開けませんでした。Safariで開いてもう一度試してください。");
-    return;
-  }
+  const grid=$("printPreviewGrid");
+  grid.innerHTML="";
 
-  const cards=selected.map(x=>{
-    const temp=document.createElement("div");
-    new QRCode(temp,{
+  selected.forEach(x=>{
+    const card=document.createElement("div");
+    card.className="print-card";
+
+    const qrWrap=document.createElement("div");
+    new QRCode(qrWrap,{
       text:`${BASE}?item=${encodeURIComponent(x.id)}`,
       width:184,
       height:184,
       correctLevel:QRCode.CorrectLevel.M
     });
-    const canvas=temp.querySelector("canvas");
-    const img=temp.querySelector("img");
-    let qrSrc="";
+
+    const canvas=qrWrap.querySelector("canvas");
+    const img0=qrWrap.querySelector("img");
+    const img=document.createElement("img");
     if(canvas){
-      try{ qrSrc=canvas.toDataURL("image/png"); }catch(e){}
+      try{ img.src=canvas.toDataURL("image/png"); }catch(e){}
     }
-    if(!qrSrc && img) qrSrc=img.src;
+    if(!img.src && img0) img.src=img0.src;
 
+    const info=document.createElement("div");
     const details=detailParts(x);
-    return `
-      <div class="label">
-        <img class="qr" src="${qrSrc}">
-        <div>
-          <div class="name">${esc(x.item_name)}</div>
-          <div class="meta">${esc(x.category)}<br>${esc(details.join(" / ") || "-")}</div>
-        </div>
-      </div>`;
-  }).join("");
+    info.innerHTML=
+      `<div class="name">${esc(x.item_name)}</div>`+
+      `<div class="meta">${esc(x.category)}<br>${esc(details.join(" / ") || "-")}</div>`;
 
-  win.document.open();
-  win.document.write(`<!doctype html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>資材QR 印刷</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;padding:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#fff}
-.top{position:sticky;top:0;background:#fff;padding:0 0 12px;margin-bottom:12px;border-bottom:1px solid #ddd}
-.top button{width:100%;padding:14px;border:0;border-radius:12px;background:#111827;color:#fff;font-size:17px;font-weight:800}
-.note{font-size:13px;color:#6b7280;margin-top:8px;line-height:1.5}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.label{border:1px solid #cfd5dc;border-radius:12px;padding:10px;display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;break-inside:avoid}
-.qr{width:92px;height:92px;object-fit:contain}
-.name{font-weight:900;font-size:15px;line-height:1.25;word-break:keep-all;overflow-wrap:normal}
-.meta{font-size:12px;color:#4b5563;margin-top:5px;line-height:1.35}
-@media(max-width:600px){.grid{grid-template-columns:1fr}}
-@media print{
-  .top{display:none!important}
-  body{padding:0}
-  .grid{grid-template-columns:repeat(2,1fr);gap:4mm}
-  .label{border:1px solid #777;border-radius:0;padding:4mm;grid-template-columns:30mm minmax(0,1fr);min-height:40mm;align-items:center}
-  .qr{width:30mm;height:30mm}
-  .name{font-size:12pt;line-height:1.15;word-break:keep-all;overflow-wrap:normal}
-  .meta{font-size:9pt;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
-  @page{size:A4 portrait;margin:8mm}
-}
-</style>
-</head>
-<body>
-<div class="top">
-  <button onclick="window.print()">この選択分を印刷</button>
-  <div class="note">${selected.length}件選択中。印刷ボタンが反応しない場合は共有ボタン →「プリント」を選んでください。</div>
-</div>
-<div class="grid">${cards}</div>
-</body>
-</html>`);
-  win.document.close();
+    card.appendChild(img);
+    card.appendChild(info);
+    grid.appendChild(card);
+  });
+
+  $("printPreviewCount").textContent=`${selected.length}件を印刷します`;
+  document.body.classList.add("print-preview-mode");
+  window.scrollTo(0,0);
+};
+
+$("printNowBtn").onclick=()=>{
+  window.print();
+};
+
+$("printBackBtn").onclick=()=>{
+  document.body.classList.remove("print-preview-mode");
+  window.scrollTo(0,0);
 };
 
 $("showBtn").onclick=()=>render(true);
