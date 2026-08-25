@@ -25,7 +25,7 @@ button{border:0;font-weight:800;cursor:pointer}
 .label{background:#fff;border:1px solid #cfd5dc;border-radius:12px;padding:10px;display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;break-inside:avoid}
 .qr{width:92px;height:92px;display:flex;align-items:center;justify-content:center}
 .qr img,.qr canvas{max-width:92px!important;max-height:92px!important}
-.name{font-weight:900;font-size:15px;line-height:1.25}
+.name{font-weight:900;font-size:15px;line-height:1.25;word-break:keep-all;overflow-wrap:normal}
 .meta{font-size:12px;color:#4b5563;margin-top:5px;line-height:1.35}
 .count{font-weight:800;color:#0f766e}
 .hidden{display:none!important}
@@ -35,12 +35,12 @@ button{border:0;font-weight:800;cursor:pointer}
   body{background:#fff}
   .wrap{max-width:none;padding:0}
   .card{box-shadow:none;padding:0;margin:0}
-  .qrgrid{grid-template-columns:repeat(3,1fr);gap:5mm}
-  .label{border:1px solid #777;border-radius:0;padding:4mm;grid-template-columns:27mm 1fr;min-height:35mm}
-  .qr{width:27mm;height:27mm}
-  .qr img,.qr canvas{width:27mm!important;height:27mm!important;max-width:none!important;max-height:none!important}
-  .name{font-size:11pt}
-  .meta{font-size:8.5pt}
+  .qrgrid{grid-template-columns:repeat(2,1fr);gap:4mm}
+  .label{border:1px solid #777;border-radius:0;padding:4mm;grid-template-columns:30mm minmax(0,1fr);min-height:40mm;align-items:center}
+  .qr{width:30mm;height:30mm}
+  .qr img,.qr canvas{width:30mm!important;height:30mm!important;max-width:none!important;max-height:none!important}
+  .name{font-size:12pt;line-height:1.15;word-break:keep-all;overflow-wrap:normal}
+  .meta{font-size:9pt;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
   @page{size:A4;margin:8mm}
 }
 
@@ -355,18 +355,18 @@ body{margin:0;padding:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe U
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .label{border:1px solid #cfd5dc;border-radius:12px;padding:10px;display:grid;grid-template-columns:92px 1fr;gap:10px;align-items:center;break-inside:avoid}
 .qr{width:92px;height:92px;object-fit:contain}
-.name{font-weight:900;font-size:15px;line-height:1.25}
+.name{font-weight:900;font-size:15px;line-height:1.25;word-break:keep-all;overflow-wrap:normal}
 .meta{font-size:12px;color:#4b5563;margin-top:5px;line-height:1.35}
 @media(max-width:600px){.grid{grid-template-columns:1fr}}
 @media print{
   .top{display:none!important}
   body{padding:0}
-  .grid{grid-template-columns:repeat(3,1fr);gap:5mm}
-  .label{border:1px solid #777;border-radius:0;padding:4mm;grid-template-columns:27mm 1fr;min-height:35mm}
-  .qr{width:27mm;height:27mm}
-  .name{font-size:11pt}
-  .meta{font-size:8.5pt}
-  @page{size:A4;margin:8mm}
+  .grid{grid-template-columns:repeat(2,1fr);gap:4mm}
+  .label{border:1px solid #777;border-radius:0;padding:4mm;grid-template-columns:30mm minmax(0,1fr);min-height:40mm;align-items:center}
+  .qr{width:30mm;height:30mm}
+  .name{font-size:12pt;line-height:1.15;word-break:keep-all;overflow-wrap:normal}
+  .meta{font-size:9pt;line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+  @page{size:A4 portrait;margin:8mm}
 }
 </style>
 </head>
