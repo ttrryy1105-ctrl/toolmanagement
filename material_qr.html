@@ -104,6 +104,7 @@ const BASE="https://ttrryy1105-ctrl.github.io/toolmanagement/material_management
 let items=[];
 let currentList=[];
 let shown=0;
+const selectedItems=new Map();
 const PAGE_SIZE=12;
 const $=id=>document.getElementById(id);
 const uniq=a=>[...new Set(a.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),"ja",{numeric:true}));
@@ -176,6 +177,8 @@ function detailParts(x){
 function makeLabel(x){
   const box=document.createElement("div");
   box.className="label";
+  box.dataset.itemId=String(x.id);
+  if(selectedItems.has(String(x.id))) box.classList.add("selected");
 
   const qr=document.createElement("div");
   qr.className="qr";
@@ -191,7 +194,14 @@ function makeLabel(x){
   box.appendChild(info);
 
   box.addEventListener("click",()=>{
-    box.classList.toggle("selected");
+    const id=String(x.id);
+    if(selectedItems.has(id)){
+      selectedItems.delete(id);
+      box.classList.remove("selected");
+    }else{
+      selectedItems.set(id,x);
+      box.classList.add("selected");
+    }
     updateSelectionBar();
   });
 
@@ -273,48 +283,53 @@ function clearResults(){
   $("loadMoreBtn").classList.add("hidden");
 }
 function updateSelectionBar(){
-  const n=document.querySelectorAll(".label.selected").length;
+  const n=selectedItems.size;
   $("selectedCount").textContent=n;
   $("selectionBar").classList.toggle("show",n>0);
 }
 
 $("clearSelected").onclick=()=>{
+  selectedItems.clear();
   document.querySelectorAll(".label.selected").forEach(el=>el.classList.remove("selected"));
   updateSelectionBar();
 };
 
 $("printSelected").onclick=()=>{
-  const selected=[...document.querySelectorAll(".label.selected")];
+  const selected=[...selectedItems.values()];
   if(!selected.length){
     alert("印刷するQRを選んでください");
     return;
   }
 
-  // iPhoneのアプリ内ブラウザでは window.print() が無反応になることがあるため、
-  // 選択したQRだけの「印刷専用ページ」を新しく開く。
   const win=window.open("","_blank");
   if(!win){
     alert("印刷ページを開けませんでした。Safariで開いてもう一度試してください。");
     return;
   }
 
-  const cards=selected.map(el=>{
-    const qrCanvas=el.querySelector(".qr canvas");
-    const qrImg=el.querySelector(".qr img");
+  const cards=selected.map(x=>{
+    const temp=document.createElement("div");
+    new QRCode(temp,{
+      text:`${BASE}?item=${encodeURIComponent(x.id)}`,
+      width:184,
+      height:184,
+      correctLevel:QRCode.CorrectLevel.M
+    });
+    const canvas=temp.querySelector("canvas");
+    const img=temp.querySelector("img");
     let qrSrc="";
-    if(qrCanvas){
-      try{ qrSrc=qrCanvas.toDataURL("image/png"); }catch(e){}
+    if(canvas){
+      try{ qrSrc=canvas.toDataURL("image/png"); }catch(e){}
     }
-    if(!qrSrc && qrImg) qrSrc=qrImg.src;
+    if(!qrSrc && img) qrSrc=img.src;
 
-    const name=el.querySelector(".name")?.textContent||"";
-    const meta=(el.querySelector(".meta")?.innerHTML||"").replace(/<br\s*\/?>/gi,"<br>");
+    const details=detailParts(x);
     return `
       <div class="label">
         <img class="qr" src="${qrSrc}">
         <div>
-          <div class="name">${esc(name)}</div>
-          <div class="meta">${meta}</div>
+          <div class="name">${esc(x.item_name)}</div>
+          <div class="meta">${esc(x.category)}<br>${esc(details.join(" / ") || "-")}</div>
         </div>
       </div>`;
   }).join("");
@@ -353,7 +368,7 @@ body{margin:0;padding:14px;font-family:-apple-system,BlinkMacSystemFont,"Segoe U
 <body>
 <div class="top">
   <button onclick="window.print()">この選択分を印刷</button>
-  <div class="note">印刷ボタンが反応しない場合は、この画面の共有ボタン →「プリント」を選んでください。</div>
+  <div class="note">${selected.length}件選択中。印刷ボタンが反応しない場合は共有ボタン →「プリント」を選んでください。</div>
 </div>
 <div class="grid">${cards}</div>
 </body>
