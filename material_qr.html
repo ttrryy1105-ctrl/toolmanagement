@@ -162,6 +162,11 @@ function detailParts(x){
   }
   if(x.specification) raw.push(String(x.specification));
 
+  // 長さがある資材（ボルト等）は一目で分かるよう L=○○mm 表示
+  if(x.length_mm!==null && x.length_mm!==undefined && String(x.length_mm).trim()){
+    raw.push(`L=${x.length_mm}mm`);
+  }
+
   // DB側で名称が違う場合にも主要な規格を拾う
   const candidates=[
     x.spec, x.standard, x.nominal_size, x.pipe_size,
