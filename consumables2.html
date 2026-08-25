@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AMBI 消耗品管理</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:#090c0b;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+header{
+  background:#050706;
+  border-bottom:3px solid #b7ef20;
+  padding:22px 18px 20px;
+}
+
+.brand{
+  max-width:650px;
+  margin:auto;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:30px;
+  font-weight:950;
+  letter-spacing:2px;
+}
+
+.logoMark{
+  color:#b7ef20;
+  font-size:32px;
+}
+
+.title{
+  font-size:27px;
+  font-weight:950;
+  margin-top:14px;
+}
+
+.subtitle{
+  color:#b7ef20;
+  font-size:12px;
+  letter-spacing:1.5px;
+  margin-top:3px;
+}
+
+.userLine{
+  margin-top:12px;
+  font-size:13px;
+  color:#c3cbc6;
+}
+
+.userLine strong{
+  color:#b7ef20;
+}
+
+.changeUser{
+  margin-left:8px;
+  background:#202522;
+  border:1px solid #414943;
+  color:#fff;
+  border-radius:7px;
+  padding:4px 9px;
+  font-size:11px;
+}
+
+.wrap{
+  max-width:650px;
+  margin:auto;
+  padding:18px 14px 40px;
+}
+
+.bigbtn{
+  width:100%;
+  min-height:102px;
+  border-radius:20px;
+  margin-bottom:15px;
+  padding:20px;
+  border:1px solid #363d39;
+  background:#151917;
+  color:#fff;
+  text-align:left;
+  font-size:21px;
+  font-weight:900;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+
+.bigbtn.primary{
+  background:linear-gradient(135deg,#c5f832,#96d915);
+  color:#080a08;
+  border:0;
+}
+
+.icon{
+  font-size:27px;
+  margin-right:7px;
+}
+
+.small{
+  display:block;
+  margin-top:8px;
+  font-size:12px;
+  font-weight:500;
+  opacity:.72;
+}
+
+.card{
+  background:#151917;
+  border:1px solid #353d38;
+  border-radius:19px;
+  padding:18px;
+  margin-bottom:15px;
+}
+
+.hero{
+  background:linear-gradient(135deg,#c5f832,#96d915);
+  color:#080a08;
+  border:0;
+}
+
+h2,h3{
+  margin-top:0;
+}
+
+label{
+  display:block;
+  margin:17px 0 8px;
+  color:#c9d0cc;
+  font-size:14px;
+  font-weight:700;
+}
+
+input,select{
+  width:100%;
+  height:53px;
+  border-radius:12px;
+  border:1px solid #414944;
+  background:#0b0e0d;
+  color:#fff;
+  font-size:17px;
+  padding:0 13px;
+}
+
+.action{
+  width:100%;
+  min-height:56px;
+  margin-top:22px;
+  border:0;
+  border-radius:13px;
+  background:#b7ef20;
+  color:#060806;
+  font-size:19px;
+  font-weight:950;
+}
+
+.back{
+  background:none;
+  color:#b7ef20;
+  border:0;
+  padding:4px 0 15px;
+  font-size:16px;
+  font-weight:700;
+}
+
+.hide{
+  display:none;
+}
+
+.notice{
+  color:#aeb6b1;
+  font-size:13px;
+  text-align:center;
+  padding:15px 0 5px;
+}
+
+.row{
+  position:relative;
+  padding:15px 0;
+  border-bottom:1px solid #303632;
+}
+
+.row:last-child{
+  border-bottom:0;
+}
+
+.itemName{
+  font-size:17px;
+  font-weight:850;
+}
+
+.total{
+  display:inline-block;
+  margin:5px 0;
+  color:#b7ef20;
+  font-size:18px;
+  font-weight:900;
+}
+
+.tag{
+  display:inline-block;
+  background:#29321f;
+  color:#caff4c;
+  border-radius:7px;
+  padding:4px 8px;
+  font-size:12px;
+}
+
+.deleteBtn{
+  margin-top:12px;
+  background:#631d1d;
+  border:1px solid #9e3c3c;
+  color:#fff;
+  border-radius:9px;
+  padding:8px 14px;
+  font-weight:800;
+}
+
+.unit{
+  color:#b7ef20;
+  margin-top:8px;
+  font-size:14px;
+  font-weight:800;
+}
+
+.empty{
+  color:#9fa7a2;
+  padding:12px 0;
+}
+
+.projectTitle{
+  color:#b7ef20;
+  font-size:20px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="brand">
+
+  <div class="logo">
+    <span class="logoMark">▲</span>
+    <span>AMBI</span>
+  </div>
+
+  <div class="title">消耗品管理</div>
+  <div class="subtitle">CONSUMABLES MANAGEMENT</div>
+
+  <div class="userLine">
+    使用者：
+    <strong id="userName">---</strong>
+    <button class="changeUser" onclick="changeUser()">名前変更</button>
+  </div>
+
+</div>
+</header>
+
+<div class="wrap">
+
+<!-- メイン -->
+<section id="menu">
+
+  <button class="bigbtn primary" onclick="openUse()">
+    <span class="icon">▣</span>
+    消耗品を使用する
+    <span class="small">QRコードまたは一覧から使用登録</span>
+  </button>
+
+  <button class="bigbtn" onclick="openHistory()">
+    <span class="icon">▤</span>
+    使用履歴を見る
+    <span class="small">誰が・いつ・何を・どの案件で使ったか</span>
+  </button>
+
+  <button class="bigbtn" onclick="openProject()">
+    <span class="icon">▥</span>
+    案件別使用量を見る
+    <span class="small">案件ごとの消耗品使用量を集計</span>
+  </button>
+
+  <div class="notice">
+    ⓘ 在庫の確認は目視にて行ってください
+  </div>
+
+</section>
+
+
+<!-- 使用登録 -->
+<section id="use" class="hide">
+
+<button class="back" onclick="showMenu()">← メニューへ戻る</button>
+
+<div class="card hero">
+  <h2>消耗品を使用する</h2>
+  QRコードから開いた場合は消耗品が自動選択されます
+</div>
+
+<div class="card">
+
+<label>消耗品名</label>
+<select id="consumable"></select>
+
+<label>使用量</label>
+<input
+  id="quantity"
+  type="number"
+  min="0.01"
+  step="0.01"
+  inputmode="decimal"
+  placeholder="使用量を入力"
+>
+
+<div id="unitDisplay" class="unit"></div>
+
+<label>案件番号</label>
+<input
+  id="projectNumber"
+  list="projectList"
+  placeholder="案件番号を入力"
+>
+<datalist id="projectList"></datalist>
+
+<label>日付</label>
+<input id="usedDate" type="date">
+
+<button class="action" onclick="registerUse()">
+使用登録
+</button>
+
+</div>
+</section>
+
+
+<!-- 履歴 -->
+<section id="history" class="hide">
+
+<button class="back" onclick="showMenu()">← メニューへ戻る</button>
+
+<div class="card">
+  <h2>▤ 使用履歴</h2>
+  <div id="historyList">読み込み中...</div>
+</div>
+
+</section>
+
+
+<!-- 案件別 -->
+<section id="project" class="hide">
+
+<button class="back" onclick="showMenu()">← メニューへ戻る</button>
+
+<div class="card">
+
+<h2>▥ 案件別使用量</h2>
+
+<label>案件番号</label>
+<input
+  id="projectSearch"
+  list="projectList2"
+  placeholder="案件番号を入力または選択"
+>
+
+<datalist id="projectList2"></datalist>
+
+<button class="action" onclick="loadProjectUsage()">
+表示する
+</button>
+
+</div>
+
+<div class="card">
+<div id="projectResult" class="empty">
+案件番号を選択してください
+</div>
+</div>
+
+</section>
+
+</div>
+
+
+<script>
+
+const db = supabase.createClient(
+  'https://bxbxroufwppcmswhoskp.supabase.co',
+  'sb_publishable_slgq-RHBmjyF2TEys4j0fg_0t5YLSAA'
+);
+
+let consumables = [];
+
+
+/* =====================
+   使用者
+===================== */
+
+function getUser(){
+
+  let name = localStorage.getItem('ambi_consumable_user');
+
+  if(!name){
+
+    name = prompt('使用者の名前を入力してください');
+
+    if(name && name.trim()){
+
+      name = name.trim();
+
+      localStorage.setItem(
+        'ambi_consumable_user',
+        name
+      );
+    }
+  }
+
+  document.getElementById('userName').textContent =
+    name || '未設定';
+
+  return name;
+}
+
+
+function changeUser(){
+
+  const current =
+    localStorage.getItem('ambi_consumable_user') || '';
+
+  const name =
+    prompt('使用者名を入力してください',current);
+
+  if(!name || !name.trim()) return;
+
+  localStorage.setItem(
+    'ambi_consumable_user',
+    name.trim()
+  );
+
+  document.getElementById('userName').textContent =
+    name.trim();
+}
+
+
+/* =====================
+   画面切替
+===================== */
+
+function hideAll(){
+
+  ['menu','use','history','project']
+  .forEach(id=>{
+
+    document
+      .getElementById(id)
+      .classList.add('hide');
+
+  });
+}
+
+
+function showMenu(){
+
+  hideAll();
+
+  document
+    .getElementById('menu')
+    .classList.remove('hide');
+
+}
+
+
+function openUse(){
+
+  hideAll();
+
+  document
+    .getElementById('use')
+    .classList.remove('hide');
+
+}
+
+
+async function openHistory(){
+
+  hideAll();
+
+  document
+    .getElementById('history')
+    .classList.remove('hide');
+
+  await loadHistory();
+
+}
+
+
+async function openProject(){
+
+  hideAll();
+
+  document
+    .getElementById('project')
+    .classList.remove('hide');
+
+  await loadProjects();
+
+}
+
+
+/* =====================
+   消耗品一覧
+===================== */
+
+async function loadConsumables(){
+
+  const {data,error} = await db
+    .from('consumables')
+    .select('*')
+    .eq('active',true)
+    .order('category')
+    .order('name');
+
+  if(error){
+
+    alert(
+      '消耗品の読み込みに失敗しました\n'
+      + error.message
+    );
+
+    return;
+  }
+
+  consumables = data || [];
+
+  const select =
+    document.getElementById('consumable');
+
+  select.innerHTML =
+    '<option value="">選択してください</option>';
+
+  consumables.forEach(c=>{
+
+    const option =
+      document.createElement('option');
+
+    option.value = c.id;
+    option.textContent = c.name;
+
+    select.appendChild(option);
+
+  });
+
+  select.onchange = showUnit;
+
+
+  /* QRコードから開いた場合 */
+
+  const params =
+    new URLSearchParams(location.search);
+
+  const itemId =
+    params.get('item');
+
+  if(itemId){
+
+    select.value = itemId;
+
+    showUnit();
+
+    openUse();
+
+  }
+}
+
+
+function showUnit(){
+
+  const id =
+    Number(
+      document
+        .getElementById('consumable')
+        .value
+    );
+
+  const item =
+    consumables.find(
+      x=>Number(x.id)===id
+    );
+
+  document
+    .getElementById('unitDisplay')
+    .textContent =
+      item
+      ? '単位：' + item.unit
+      : '';
+
+}
+
+
+/* =====================
+   案件番号
+===================== */
+
+async function loadProjects(){
+
+  const {data,error} = await db
+    .from('consumable_projects')
+    .select('*')
+    .order(
+      'last_used_at',
+      {ascending:false}
+    );
+
+  if(error) return;
+
+  const lists = [
+    document.getElementById('projectList'),
+    document.getElementById('projectList2')
+  ];
+
+  lists.forEach(list=>{
+
+    list.innerHTML = '';
+
+    (data || []).forEach(p=>{
+
+      const option =
+        document.createElement('option');
+
+      option.value =
+        p.project_number;
+
+      list.appendChild(option);
+
+    });
+
+  });
+}
+
+
+/* =====================
+   使用登録
+===================== */
+
+async function registerUse(){
+
+  const user = getUser();
+
+  if(!user){
+
+    alert('使用者名を入力してください');
+
+    return;
+  }
+
+
+  const consumableId =
+    Number(
+      document
+        .getElementById('consumable')
+        .value
+    );
+
+
+  const quantity =
+    Number(
+      document
+        .getElementById('quantity')
+        .value
+    );
+
+
+  const project =
+    document
+      .getElementById('projectNumber')
+      .value
+      .trim();
+
+
+  const date =
+    document
+      .getElementById('usedDate')
+      .value;
+
+
+  if(!consumableId){
+
+    alert('消耗品を選択してください');
+
+    return;
+  }
+
+
+  if(!quantity || quantity <= 0){
+
+    alert('使用量を入力してください');
+
+    return;
+  }
+
+
+  if(!project){
+
+    alert('案件番号を入力してください');
+
+    return;
+  }
+
+
+  if(!date){
+
+    alert('日付を入力してください');
+
+    return;
+  }
+
+
+  const {error} = await db
+    .from('consumable_usage')
+    .insert({
+
+      user_name:user,
+
+      consumable_id:
+        consumableId,
+
+      quantity:quantity,
+
+      project_number:
+        project,
+
+      used_date:
+        date
+
+    });
+
+
+  if(error){
+
+    alert(
+      '登録に失敗しました\n'
+      + error.message
+    );
+
+    return;
+  }
+
+
+  const {error:projectError} = await db
+    .from('consumable_projects')
+    .upsert({
+
+      project_number:project,
+
+      last_used_at:
+        new Date().toISOString()
+
+    },{
+      onConflict:'project_number'
+    });
+
+
+  if(projectError){
+
+    console.log(projectError);
+
+  }
+
+
+  alert('登録しました！');
+
+
+  document
+    .getElementById('quantity')
+    .value = '';
+
+
+  await loadProjects();
+
+}
+
+
+/* =====================
+   使用履歴
+===================== */
+
+async function loadHistory(){
+
+  const box =
+    document.getElementById('historyList');
+
+  box.textContent =
+    '読み込み中...';
+
+
+  const {data,error} = await db
+    .from('consumable_usage')
+    .select(`
+      id,
+      user_name,
+      quantity,
+      project_number,
+      used_date,
+      created_at,
+      consumables (
+        name,
+        unit
+      )
+    `)
+    .order(
+      'created_at',
+      {ascending:false}
+    )
+    .limit(200);
+
+
+  if(error){
+
+    box.textContent =
+      '履歴の読み込みに失敗しました';
+
+    return;
+  }
+
+
+  if(!data || !data.length){
+
+    box.innerHTML =
+      '<div class="empty">まだ使用履歴はありません</div>';
+
+    return;
+  }
+
+
+  box.innerHTML = '';
+
+
+  data.forEach(r=>{
+
+    const row =
+      document.createElement('div');
+
+    row.className =
+      'row';
+
+
+    const itemName =
+      r.consumables?.name || '不明';
+
+
+    const unit =
+      r.consumables?.unit || '';
+
+
+    row.innerHTML =
+
+      '<div class="itemName">'
+      + escapeHtml(itemName)
+      + '</div>'
+
+      + '<div class="total">'
+      + escapeHtml(r.quantity)
+      + ' '
+      + escapeHtml(unit)
+      + '</div><br>'
+
+      + '<span class="tag">'
+      + escapeHtml(r.project_number)
+      + '</span> '
+
+      + escapeHtml(r.used_date)
+
+      + '<br>'
+
+      + '<small>使用者：'
+      + escapeHtml(r.user_name)
+      + '</small>'
+
+      + '<br>'
+
+      + '<button class="deleteBtn" '
+      + 'onclick="deleteUsage('
+      + Number(r.id)
+      + ')">🗑 間違い登録を削除</button>';
+
+
+    box.appendChild(row);
+
+  });
+
+}
+
+
+/* =====================
+   履歴削除
+===================== */
+
+async function deleteUsage(id){
+
+  const ok =
+    confirm(
+      'この使用履歴を削除しますか？\n\n'
+      + '間違い登録の場合のみ削除してください。'
+    );
+
+  if(!ok) return;
+
+
+  const {error} = await db
+    .from('consumable_usage')
+    .delete()
+    .eq('id',id);
+
+
+  if(error){
+
+    alert(
+      '削除に失敗しました\n'
+      + error.message
+    );
+
+    return;
+  }
+
+
+  alert('削除しました');
+
+  await loadHistory();
+
+}
+
+
+/* =====================
+   案件別集計
+===================== */
+
+async function loadProjectUsage(){
+
+  const project =
+    document
+      .getElementById('projectSearch')
+      .value
+      .trim();
+
+
+  const box =
+    document
+      .getElementById('projectResult');
+
+
+  if(!project){
+
+    alert(
+      '案件番号を入力してください'
+    );
+
+    return;
+  }
+
+
+  box.textContent =
+    '集計中...';
+
+
+  const {data,error} = await db
+    .from('consumable_usage')
+    .select(`
+      quantity,
+      consumables (
+        name,
+        unit
+      )
+    `)
+    .eq(
+      'project_number',
+      project
+    );
+
+
+  if(error){
+
+    box.textContent =
+      '読み込みに失敗しました';
+
+    return;
+  }
+
+
+  if(!data || !data.length){
+
+    box.innerHTML =
+      '<div class="empty">'
+      + 'この案件の使用履歴はありません'
+      + '</div>';
+
+    return;
+  }
+
+
+  const totals = {};
+
+
+  data.forEach(r=>{
+
+    const name =
+      r.consumables?.name || '不明';
+
+    const unit =
+      r.consumables?.unit || '';
+
+    const key =
+      name + '|' + unit;
+
+
+    if(!totals[key]){
+
+      totals[key] = {
+
+        name:name,
+
+        unit:unit,
+
+        quantity:0
+
+      };
+
+    }
+
+
+    totals[key].quantity +=
+      Number(r.quantity);
+
+  });
+
+
+  box.innerHTML =
+    '<div class="projectTitle">'
+    + '案件：'
+    + escapeHtml(project)
+    + '</div>';
+
+
+  Object.values(totals)
+  .forEach(t=>{
+
+    const row =
+      document.createElement('div');
+
+    row.className =
+      'row';
+
+
+    row.innerHTML =
+
+      '<div class="itemName">'
+      + escapeHtml(t.name)
+      + '</div>'
+
+      + '<div class="total">'
+      + escapeHtml(t.quantity)
+      + ' '
+      + escapeHtml(t.unit)
+      + '</div>';
+
+
+    box.appendChild(row);
+
+  });
+
+}
+
+
+/* =====================
+   安全表示
+===================== */
+
+function escapeHtml(value){
+
+  return String(value ?? '')
+
+    .replaceAll('&','&amp;')
+
+    .replaceAll('<','&lt;')
+
+    .replaceAll('>','&gt;')
+
+    .replaceAll('"','&quot;')
+
+    .replaceAll("'","&#39;");
+
+}
+
+
+/* =====================
+   初期化
+===================== */
+
+async function init(){
+
+  getUser();
+
+
+  document
+    .getElementById('usedDate')
+    .value =
+      new Date()
+        .toISOString()
+        .slice(0,10);
+
+
+  await loadConsumables();
+
+  await loadProjects();
+
+}
+
+
+init();
+
+</script>
+
+</body>
+</html>
