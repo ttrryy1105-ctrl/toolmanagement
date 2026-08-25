@@ -88,6 +88,34 @@ body.print-preview-mode .print-preview-screen{display:block!important;background
   @page{size:A4 portrait;margin:8mm}
 }
 
+
+.direct-print-page{background:#fff;min-height:100vh;padding:14px}
+.direct-print-toolbar{position:sticky;top:0;z-index:99;background:#fff;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid #ddd}
+.direct-print-toolbar button{width:100%;padding:14px;border:0;border-radius:12px;font-size:17px;font-weight:900;margin-bottom:8px}
+.direct-print-btn{background:#111827;color:#fff}
+.direct-back-btn{background:#e5e7eb;color:#111827}
+.direct-count{font-size:13px;color:#6b7280}
+.direct-print-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.print-card-direct{border:1px solid #cfd5dc;border-radius:12px;padding:10px;display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;align-items:center;break-inside:avoid}
+.print-card-direct img{width:92px;height:92px;object-fit:contain}
+.print-card-direct .name{font-weight:900;font-size:15px;line-height:1.2;word-break:keep-all}
+.print-card-direct .meta{font-size:12px;color:#4b5563;margin-top:5px;line-height:1.35}
+@media(max-width:600px){.direct-print-grid{grid-template-columns:1fr}}
+@media print{
+  body{background:#fff!important}
+  .direct-print-toolbar{display:none!important}
+  .direct-print-page{padding:0!important}
+  .direct-print-grid{grid-template-columns:repeat(2,1fr)!important;gap:4mm!important}
+  .print-card-direct{
+    border:1px solid #777!important;border-radius:0!important;padding:4mm!important;
+    grid-template-columns:30mm minmax(0,1fr)!important;min-height:40mm!important;align-items:center!important
+  }
+  .print-card-direct img{width:30mm!important;height:30mm!important}
+  .print-card-direct .name{font-size:12pt!important;line-height:1.15!important;word-break:keep-all!important}
+  .print-card-direct .meta{font-size:9pt!important;line-height:1.25!important;word-break:keep-all!important;overflow-wrap:anywhere!important}
+  @page{size:A4 portrait;margin:8mm}
+}
+
 </style>
 </head>
 <body>
@@ -345,13 +373,7 @@ $("printSelected").onclick=()=>{
     return;
   }
 
-  const grid=$("printPreviewGrid");
-  grid.innerHTML="";
-
-  selected.forEach(x=>{
-    const card=document.createElement("div");
-    card.className="print-card";
-
+  const cards=selected.map(x=>{
     const qrWrap=document.createElement("div");
     new QRCode(qrWrap,{
       text:`${BASE}?item=${encodeURIComponent(x.id)}`,
@@ -362,25 +384,33 @@ $("printSelected").onclick=()=>{
 
     const canvas=qrWrap.querySelector("canvas");
     const img0=qrWrap.querySelector("img");
-    const img=document.createElement("img");
+    let src="";
     if(canvas){
-      try{ img.src=canvas.toDataURL("image/png"); }catch(e){}
+      try{ src=canvas.toDataURL("image/png"); }catch(e){}
     }
-    if(!img.src && img0) img.src=img0.src;
+    if(!src && img0) src=img0.src;
 
-    const info=document.createElement("div");
     const details=detailParts(x);
-    info.innerHTML=
-      `<div class="name">${esc(x.item_name)}</div>`+
-      `<div class="meta">${esc(x.category)}<br>${esc(details.join(" / ") || "-")}</div>`;
+    return `
+      <div class="print-card-direct">
+        <img src="${src}" alt="QR">
+        <div>
+          <div class="name">${esc(x.item_name)}</div>
+          <div class="meta">${esc(x.category)}<br>${esc(details.join(" / ") || "-")}</div>
+        </div>
+      </div>`;
+  }).join("");
 
-    card.appendChild(img);
-    card.appendChild(info);
-    grid.appendChild(card);
-  });
+  document.body.innerHTML=`
+    <div class="direct-print-page">
+      <div class="direct-print-toolbar">
+        <button type="button" onclick="window.print()" class="direct-print-btn">印刷・PDF保存</button>
+        <button type="button" onclick="location.reload()" class="direct-back-btn">QR選択に戻る</button>
+        <div class="direct-count">${selected.length}件を印刷します</div>
+      </div>
+      <div class="direct-print-grid">${cards}</div>
+    </div>`;
 
-  $("printPreviewCount").textContent=`${selected.length}件を印刷します`;
-  document.body.classList.add("print-preview-mode");
   window.scrollTo(0,0);
 };
 
