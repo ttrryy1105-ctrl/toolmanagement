@@ -3,171 +3,666 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#020714">
 <title>AMBI 消耗品管理</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}
 :root{
-  --bg:#070b12;
-  --panel:#0e1622;
-  --panel2:#111c2b;
-  --blue:#1476ff;
-  --blue2:#0d5fd6;
-  --yellow:#ffd93d;
-  --text:#f7f9fc;
-  --muted:#9ca8b8;
-  --line:#21344d;
-  --danger:#8f2630;
+  --bg:#020714;
+  --bg2:#061126;
+  --card:#071426;
+  --card2:#0b1d38;
+  --blue:#0878ff;
+  --blue2:#0c54d8;
+  --cyan:#53d9ff;
+  --yellow:#ffd51f;
+  --text:#fff;
+  --muted:#c2ccdc;
+  --line:#0d4f9f;
+  --danger:#9b2732;
 }
+html{background:var(--bg)}
 body{
-  margin:0;background:
-  radial-gradient(circle at 80% 0%,rgba(20,118,255,.16),transparent 35%),
-  linear-gradient(180deg,#06101e 0%,var(--bg) 50%);
+  margin:0;
+  min-height:100vh;
   color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic UI",sans-serif;
+  background:
+    radial-gradient(circle at 76% 10%,rgba(0,104,255,.16),transparent 30%),
+    radial-gradient(circle at 25% 48%,rgba(0,48,130,.10),transparent 42%),
+    linear-gradient(180deg,#020713 0%,#020817 45%,#01050d 100%);
+  overflow-x:hidden;
+  padding-bottom:90px;
 }
+
+body::before{
+  content:"";
+  position:absolute;
+  top:88px;
+  right:-24%;
+  width:120%;
+  height:340px;
+  pointer-events:none;
+  z-index:0;
+  transform:rotate(-8deg);
+  background:
+    linear-gradient(164deg,
+      transparent 0 43%,
+      rgba(0,70,255,.04) 43.5%,
+      rgba(0,98,255,.22) 45%,
+      rgba(0,142,255,.82) 46.2%,
+      rgba(70,235,255,.98) 46.8%,
+      rgba(0,126,255,.65) 47.5%,
+      rgba(0,72,255,.10) 49%,
+      transparent 51% 100%),
+    linear-gradient(169deg,
+      transparent 0 54%,
+      rgba(0,88,255,.08) 55%,
+      rgba(0,119,255,.45) 56.3%,
+      rgba(66,217,255,.92) 57%,
+      rgba(0,113,255,.36) 57.8%,
+      transparent 59.6% 100%),
+    linear-gradient(161deg,
+      transparent 0 64%,
+      rgba(0,76,255,.06) 65%,
+      rgba(0,107,255,.33) 66.2%,
+      rgba(0,185,255,.75) 67%,
+      transparent 69% 100%);
+  filter:
+    drop-shadow(0 0 7px rgba(0,120,255,.85))
+    drop-shadow(0 0 20px rgba(0,100,255,.42));
+  opacity:.96;
+}
+
+.app{
+  position:relative;
+  z-index:1;
+  max-width:720px;
+  margin:0 auto;
+}
+
 header{
-  background:linear-gradient(180deg,rgba(7,17,31,.98),rgba(7,13,21,.96));
-  border-bottom:1px solid #1f3550;
-  padding:20px 16px 18px;
+  padding:28px 22px 18px;
+  background:transparent;
 }
-.brand{max-width:680px;margin:auto}
-.brandTop{display:flex;align-items:center;justify-content:space-between;gap:14px}
-.logoImg{width:168px;max-width:48vw;height:auto;display:block}
-.title{font-size:27px;font-weight:950;margin-top:12px;letter-spacing:.02em}
-.subtitle{color:#76adff;font-size:11px;letter-spacing:1.8px;margin-top:3px}
-.userBar{
-  margin-top:15px;display:flex;align-items:center;justify-content:space-between;gap:10px;
-  background:#0d1724;border:1px solid #20364f;border-radius:12px;padding:11px 12px;
+
+.logo{
+  width:190px;
+  max-width:53vw;
+  height:auto;
+  display:block;
+  background:transparent;
+  border:0;
+  outline:0;
+  box-shadow:none;
+  filter:drop-shadow(0 0 9px rgba(0,93,255,.15));
 }
-.userBar small{color:var(--muted)}
-.userName{font-weight:900;color:#fff}
-.userEdit{border:1px solid #315b8f;background:#10253f;color:#bcd8ff;border-radius:8px;padding:8px 10px;font-weight:800}
-.wrap{max-width:680px;margin:auto;padding:17px 14px 42px}
+
+.title{
+  margin-top:14px;
+  font-size:34px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.03em;
+  text-shadow:0 0 14px rgba(0,102,255,.12);
+}
+
+.subtitle{
+  margin-top:10px;
+  color:#1679ff;
+  font-size:13px;
+  letter-spacing:1.6px;
+  font-weight:700;
+}
+
+.userCard{
+  margin-top:24px;
+  min-height:92px;
+  padding:14px 14px 14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  border:1px solid rgba(17,93,190,.9);
+  border-radius:20px;
+  background:linear-gradient(135deg,rgba(5,16,31,.96),rgba(3,12,25,.94));
+  box-shadow:
+    inset 0 0 22px rgba(0,87,255,.03),
+    0 0 18px rgba(0,92,255,.06);
+}
+
+.userLeft{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.userIcon{
+  width:54px;
+  height:54px;
+  flex:0 0 54px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  color:#0c73ff;
+  background:radial-gradient(circle,#0a3b77 0%,#06214a 72%);
+  border:1px solid #0e63c8;
+  box-shadow:0 0 15px rgba(0,111,255,.22);
+  font-size:30px;
+}
+
+.userMeta{
+  min-width:0;
+}
+
+.userLabel{
+  color:#d5dbe5;
+  font-size:14px;
+  line-height:1.1;
+}
+
+.userName{
+  color:#fff;
+  margin-top:4px;
+  font-size:22px;
+  font-weight:950;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.nameBtn{
+  min-height:45px;
+  padding:0 14px;
+  border-radius:11px;
+  border:1px solid #0b73f5;
+  color:#8fc3ff;
+  background:#051529;
+  font-size:14px;
+  font-weight:850;
+  box-shadow:0 0 10px rgba(0,109,255,.08);
+}
+
+.content{
+  padding:0 22px 22px;
+}
+
 .menuCard{
-  width:100%;min-height:110px;border:1px solid #20354f;border-radius:19px;
-  margin-bottom:14px;padding:18px 17px;text-align:left;color:#fff;
-  background:linear-gradient(135deg,#111b29,#0b131e);
-  box-shadow:inset 4px 0 0 var(--blue),0 9px 22px rgba(0,0,0,.18);
+  position:relative;
+  width:100%;
+  min-height:150px;
+  margin:14px 0;
+  padding:24px 54px 24px 26px;
+  display:flex;
+  align-items:center;
+  gap:22px;
+  text-align:left;
+  color:#fff;
+  background:
+    linear-gradient(135deg,rgba(9,29,57,.98),rgba(3,14,29,.98));
+  border:1px solid rgba(12,92,189,.92);
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow:
+    inset 5px 0 0 #0b75ff,
+    0 14px 30px rgba(0,0,0,.18),
+    0 0 20px rgba(0,102,255,.04);
 }
+
 .menuCard.primary{
-  background:linear-gradient(135deg,#123c74,#0b2342);
-  border-color:#24578f;
-  box-shadow:inset 4px 0 0 var(--yellow),0 10px 24px rgba(0,0,0,.22);
+  background:
+    radial-gradient(circle at 25% 38%,rgba(0,100,255,.16),transparent 40%),
+    linear-gradient(135deg,rgba(14,51,101,.99),rgba(4,22,43,.99));
+  border-color:#0e6ee4;
+  box-shadow:
+    inset 5px 0 0 var(--yellow),
+    0 14px 30px rgba(0,0,0,.20),
+    0 0 26px rgba(0,107,255,.08);
 }
-.menuRow{display:flex;align-items:center;gap:14px}
-.menuIcon{
-  flex:0 0 50px;height:50px;border-radius:13px;display:grid;place-items:center;
-  background:#102c52;border:1px solid #285c98;font-size:25px;
+
+.iconBox{
+  width:86px;
+  height:86px;
+  flex:0 0 86px;
+  display:grid;
+  place-items:center;
+  border-radius:18px;
+  color:#fff;
+  background:linear-gradient(145deg,#0d3f7d,#08285a);
+  border:1px solid #0b67cf;
+  box-shadow:inset 0 0 18px rgba(0,111,255,.15);
+  font-size:42px;
 }
-.primary .menuIcon{background:#f6c935;color:#10151b;border:0}
-.menuText{min-width:0;flex:1}
-.menuTitle{font-size:21px;font-weight:950}
-.menuDesc{font-size:12px;color:#aeb9c7;margin-top:6px;line-height:1.45}
-.arrow{font-size:27px;color:#4c9cff}
-.primary .arrow{color:var(--yellow)}
+
+.primary .iconBox{
+  color:#08121f;
+  background:linear-gradient(145deg,#ffe14a,#f6bd00);
+  border:0;
+  box-shadow:0 0 20px rgba(255,209,31,.08);
+}
+
+.menuInfo{
+  min-width:0;
+  flex:1;
+}
+
+.menuTitle{
+  font-size:26px;
+  font-weight:950;
+  line-height:1.12;
+  letter-spacing:-.02em;
+}
+
+.menuDesc{
+  margin-top:10px;
+  color:#e0e6ef;
+  font-size:14px;
+  line-height:1.45;
+}
+
+.chev{
+  position:absolute;
+  right:22px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#0b75ff;
+  font-size:46px;
+  line-height:1;
+  font-weight:500;
+  text-shadow:0 0 10px rgba(0,111,255,.45);
+}
+
+.primary .chev{
+  color:var(--yellow);
+  text-shadow:0 0 10px rgba(255,209,31,.18);
+}
+
 .notice{
-  margin-top:5px;border:1px solid #263950;background:#0b1420;border-radius:14px;
-  padding:13px;text-align:center;color:#9facba;font-size:12px;
+  margin:18px 0 0;
+  min-height:64px;
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border:1px solid rgba(13,78,151,.9);
+  border-radius:18px;
+  background:linear-gradient(135deg,rgba(5,18,34,.94),rgba(3,13,26,.96));
+  color:#fff;
+  font-size:15px;
 }
-.card{
-  background:linear-gradient(180deg,#111a27,#0b121c);
-  border:1px solid #263b55;border-radius:18px;padding:17px;margin-bottom:14px;
+
+.noticeIcon{
+  width:32px;
+  height:32px;
+  flex:0 0 32px;
+  display:grid;
+  place-items:center;
+  border:2px solid #0c71ff;
+  border-radius:50%;
+  color:#0c71ff;
+  font-weight:900;
 }
-.hero{
-  background:linear-gradient(135deg,#173e72,#0c2340);
-  border-color:#2b5e9b;
-  box-shadow:inset 4px 0 0 var(--yellow);
+
+.notice strong{color:var(--yellow)}
+
+.section{
+  display:none;
+  padding:4px 0 10px;
 }
-h2,h3{margin-top:0}
-label{display:block;margin:16px 0 7px;color:#cbd6e3;font-size:14px;font-weight:800}
+
+.section.active{display:block}
+
+.backBtn{
+  border:0;
+  background:none;
+  color:#72b2ff;
+  font-size:16px;
+  font-weight:850;
+  padding:4px 0 14px;
+}
+
+.panel{
+  background:linear-gradient(180deg,rgba(8,23,43,.98),rgba(3,13,25,.99));
+  border:1px solid rgba(15,79,151,.9);
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:0 0 20px rgba(0,89,255,.04);
+}
+
+.panel h2{
+  margin:0 0 8px;
+  font-size:24px;
+}
+
+.panel p{
+  margin:0;
+  color:#b8c6d8;
+  font-size:13px;
+}
+
+label{
+  display:block;
+  margin:17px 0 7px;
+  color:#d4dce8;
+  font-size:14px;
+  font-weight:800;
+}
+
 input,select{
-  width:100%;height:53px;border:1px solid #34506f;border-radius:12px;
-  background:#070d15;color:#fff;font-size:17px;padding:0 13px;
+  width:100%;
+  height:54px;
+  border:1px solid #244e7d;
+  border-radius:12px;
+  background:#020914;
+  color:#fff;
+  padding:0 13px;
+  font-size:17px;
 }
+
+input:focus,select:focus{
+  outline:2px solid #0c75ff;
+  outline-offset:1px;
+}
+
+.unit{
+  color:var(--yellow);
+  margin-top:8px;
+  font-size:14px;
+  font-weight:900;
+}
+
 .action{
-  width:100%;min-height:55px;margin-top:21px;border:0;border-radius:13px;
-  background:linear-gradient(135deg,var(--blue),var(--blue2));
-  color:#fff;font-size:18px;font-weight:950;
-  box-shadow:0 8px 18px rgba(20,118,255,.22);
+  width:100%;
+  min-height:56px;
+  margin-top:22px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#0e7cff,#0755ca);
+  color:#fff;
+  font-size:18px;
+  font-weight:950;
+  box-shadow:0 8px 20px rgba(0,95,255,.24);
 }
-.back{border:0;background:none;color:#6ba9ff;font-size:16px;font-weight:850;padding:4px 0 14px}
-.hide{display:none}
-.unit{color:var(--yellow);font-weight:900;margin-top:8px}
-.row{padding:14px 0;border-bottom:1px solid #24364c}
+
+.row{
+  padding:14px 0;
+  border-bottom:1px solid rgba(37,64,95,.9);
+}
+
 .row:last-child{border-bottom:0}
-.itemName{font-size:17px;font-weight:900}
-.total{display:inline-block;color:#68a8ff;font-size:18px;font-weight:950;margin:5px 0}
-.tag{display:inline-block;background:#132945;color:#86b9ff;border-radius:7px;padding:4px 8px;font-size:12px}
-.deleteBtn{margin-top:11px;border:1px solid #bd4b57;background:#651f27;color:#fff;border-radius:9px;padding:9px 13px;font-weight:850}
-.empty{color:#9ba8b7;padding:10px 0}
-.projectTitle{color:var(--yellow);font-size:20px;font-weight:950;margin-bottom:8px}
-.footer{text-align:center;color:#536273;font-size:11px;margin-top:16px}
+
+.itemName{
+  font-size:17px;
+  font-weight:900;
+}
+
+.total{
+  display:inline-block;
+  margin:6px 0;
+  color:#6fb1ff;
+  font-size:18px;
+  font-weight:950;
+}
+
+.tag{
+  display:inline-block;
+  padding:4px 8px;
+  border-radius:7px;
+  background:#0d2f59;
+  color:#8cc0ff;
+  font-size:12px;
+}
+
+.deleteBtn{
+  margin-top:12px;
+  padding:9px 13px;
+  border:1px solid #ad4650;
+  border-radius:9px;
+  background:#5f1c24;
+  color:#fff;
+  font-weight:850;
+}
+
+.empty{
+  color:#91a0b4;
+  padding:10px 0;
+}
+
+.projectTitle{
+  color:var(--yellow);
+  font-size:20px;
+  font-weight:950;
+  margin-bottom:8px;
+}
+
+.bottomNav{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:40;
+  height:84px;
+  padding-bottom:env(safe-area-inset-bottom);
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  background:linear-gradient(180deg,rgba(3,14,29,.96),rgba(2,8,18,.99));
+  border-top:1px solid #0b4c96;
+  backdrop-filter:blur(10px);
+}
+
+.navBtn{
+  min-width:0;
+  border:0;
+  background:none;
+  color:#d9e3f1;
+  font-size:11px;
+  font-weight:750;
+}
+
+.navIcon{
+  display:block;
+  font-size:27px;
+  line-height:1;
+  margin-bottom:6px;
+}
+
+.navBtn.active{
+  color:#0b75ff;
+}
+
+@media (max-width:480px){
+  header{padding:24px 16px 16px}
+  .content{padding:0 16px 18px}
+  .logo{width:170px}
+  .title{font-size:31px}
+  .menuCard{min-height:132px;padding:19px 48px 19px 18px;gap:15px}
+  .iconBox{width:70px;height:70px;flex-basis:70px;font-size:33px}
+  .menuTitle{font-size:22px}
+  .menuDesc{font-size:12px}
+  .chev{right:16px;font-size:38px}
+  body::before{top:70px;right:-38%;width:145%;height:300px}
+}
+
+/* ===== FINAL APPROVED AMBI DESIGN ===== */
+body{
+  background:
+    radial-gradient(circle at 82% 10%,rgba(0,110,255,.18),transparent 29%),
+    radial-gradient(circle at 50% 0%,rgba(0,38,95,.10),transparent 45%),
+    linear-gradient(180deg,#020712 0%,#020817 48%,#01050d 100%) !important;
+}
+
+header{
+  background:transparent !important;
+  border:0 !important;
+}
+
+.logo{
+  background:transparent !important;
+  border:0 !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  filter:
+    drop-shadow(0 0 8px rgba(0,100,255,.14))
+    drop-shadow(0 0 2px rgba(0,0,0,.22)) !important;
+}
+
+body::before{
+  top:78px !important;
+  right:-24% !important;
+  width:122% !important;
+  height:330px !important;
+  opacity:1 !important;
+  transform:rotate(-7deg) !important;
+  background:
+    linear-gradient(165deg,
+      transparent 0 43%,
+      rgba(0,80,255,.04) 44%,
+      rgba(0,110,255,.25) 45.2%,
+      rgba(0,155,255,.88) 46.4%,
+      rgba(82,234,255,1) 47%,
+      rgba(0,125,255,.70) 47.7%,
+      rgba(0,70,255,.10) 49.4%,
+      transparent 51.4% 100%),
+    linear-gradient(170deg,
+      transparent 0 54%,
+      rgba(0,86,255,.06) 55.2%,
+      rgba(0,118,255,.42) 56.4%,
+      rgba(53,214,255,.93) 57.2%,
+      rgba(0,112,255,.34) 58%,
+      transparent 59.8% 100%),
+    linear-gradient(161deg,
+      transparent 0 65%,
+      rgba(0,84,255,.05) 65.8%,
+      rgba(0,109,255,.30) 67%,
+      rgba(0,181,255,.73) 67.8%,
+      transparent 69.6% 100%) !important;
+  filter:
+    drop-shadow(0 0 8px rgba(0,120,255,.80))
+    drop-shadow(0 0 22px rgba(0,100,255,.38)) !important;
+}
+
+.userCard{
+  background:linear-gradient(135deg,rgba(4,14,29,.97),rgba(3,10,22,.96)) !important;
+  border-color:rgba(10,91,190,.90) !important;
+  box-shadow:0 0 18px rgba(0,103,255,.05) !important;
+}
+
+.menuCard{
+  background:linear-gradient(135deg,rgba(5,19,39,.99),rgba(2,10,21,.99)) !important;
+  border-color:rgba(5,92,193,.95) !important;
+  box-shadow:
+    inset 5px 0 0 #0b75ff,
+    0 0 20px rgba(0,108,255,.10),
+    0 14px 30px rgba(0,0,0,.18) !important;
+}
+
+.menuCard.primary{
+  background:
+    radial-gradient(circle at 25% 40%,rgba(0,98,255,.15),transparent 42%),
+    linear-gradient(135deg,rgba(10,41,82,.99),rgba(3,17,34,.99)) !important;
+  border-color:#0c79ff !important;
+  box-shadow:
+    inset 5px 0 0 var(--yellow),
+    0 0 22px rgba(0,120,255,.15),
+    0 14px 30px rgba(0,0,0,.20) !important;
+}
+
+.notice{
+  background:linear-gradient(135deg,rgba(4,15,29,.97),rgba(2,10,20,.98)) !important;
+  border-color:rgba(7,79,161,.88) !important;
+}
+
+.bottomNav{
+  background:linear-gradient(180deg,rgba(3,13,28,.97),rgba(1,7,16,.995)) !important;
+  border-top-color:#0b64c8 !important;
+  box-shadow:0 -4px 18px rgba(0,94,255,.05);
+}
+
+
+.logo{
+  background:none !important;
+  background-color:transparent !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:none !important;
+}
+
 </style>
 </head>
+
 <body>
+<div class="app">
 
 <header>
-  <div class="brand">
-    <div class="brandTop">
-      <img class="logoImg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAADwCAYAAADmfBqxAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDcuMi1jMDAwIDc5LmRlZTNhNzcwMywgMjAyMi8wOC8xOC0xNjo1MDozMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIDIzLjUgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjk0QzFCMEVDQkZDQjExRUU4ODNEQ0U0QjRCNENCQUU5IiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOjk0QzFCMEVEQkZDQjExRUU4ODNEQ0U0QjRCNENCQUU5Ij4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6OTRDMUIwRUFCRkNCMTFFRTg4M0RDRTRCNEI0Q0JBRTkiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6OTRDMUIwRUJCRkNCMTFFRTg4M0RDRTRCNEI0Q0JBRTkiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz7xKp4qAAAV8klEQVR42uyd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" alt="AMBI">
+  <img class="logo" src="data:image/png;base64,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" alt="AMBI">
+  <div class="title">消耗品管理</div>
+  <div class="subtitle">CONSUMABLES MANAGEMENT</div>
+
+  <div class="userCard">
+    <div class="userLeft">
+      <div class="userIcon">●</div>
+      <div class="userMeta">
+        <div class="userLabel">使用者</div>
+        <div class="userName" id="userName">---</div>
+      </div>
     </div>
-    <div class="title">消耗品管理</div>
-    <div class="subtitle">CONSUMABLES MANAGEMENT</div>
-    <div class="userBar">
-      <div><small>使用者</small><br><span class="userName" id="userName">---</span></div>
-      <button class="userEdit" onclick="changeUser()">名前変更</button>
-    </div>
+    <button class="nameBtn" type="button" onclick="changeUser()">✎ 名前変更</button>
   </div>
 </header>
 
-<div class="wrap">
+<main class="content">
 
-<section id="menu">
-  <button class="menuCard primary" onclick="openUse()">
-    <div class="menuRow">
-      <div class="menuIcon">▣</div>
-      <div class="menuText">
-        <div class="menuTitle">消耗品を使用</div>
-        <div class="menuDesc">QRコードまたは一覧から使用登録</div>
-      </div>
-      <div class="arrow">›</div>
+<section id="menu" class="section active">
+
+  <button class="menuCard primary" type="button" onclick="openUse()">
+    <div class="iconBox">▣</div>
+    <div class="menuInfo">
+      <div class="menuTitle">消耗品を使用</div>
+      <div class="menuDesc">QRコードまたは一覧から使用登録</div>
     </div>
+    <div class="chev">›</div>
   </button>
 
-  <button class="menuCard" onclick="openHistory()">
-    <div class="menuRow">
-      <div class="menuIcon">▤</div>
-      <div class="menuText">
-        <div class="menuTitle">使用履歴</div>
-        <div class="menuDesc">誰が・いつ・何を・どの案件で使ったかを確認</div>
-      </div>
-      <div class="arrow">›</div>
+  <button class="menuCard" type="button" onclick="openHistory()">
+    <div class="iconBox">☷</div>
+    <div class="menuInfo">
+      <div class="menuTitle">使用履歴</div>
+      <div class="menuDesc">誰が・いつ・何を・どの案件で使ったか確認</div>
     </div>
+    <div class="chev">›</div>
   </button>
 
-  <button class="menuCard" onclick="openProject()">
-    <div class="menuRow">
-      <div class="menuIcon">▥</div>
-      <div class="menuText">
-        <div class="menuTitle">案件別使用量</div>
-        <div class="menuDesc">案件ごとの消耗品使用量を集計</div>
-      </div>
-      <div class="arrow">›</div>
+  <button class="menuCard" type="button" onclick="openProject()">
+    <div class="iconBox">▥</div>
+    <div class="menuInfo">
+      <div class="menuTitle">案件別使用量</div>
+      <div class="menuDesc">案件ごとの消耗品使用量を集計</div>
     </div>
+    <div class="chev">›</div>
   </button>
 
-  <div class="notice">ⓘ 在庫の確認は目視にて行ってください</div>
-  <div class="footer">AMBI INTERNAL SYSTEM</div>
+  <div class="notice">
+    <div class="noticeIcon">i</div>
+    <div>在庫の確認は<strong>目視</strong>にて行ってください</div>
+  </div>
+
 </section>
 
-<section id="use" class="hide">
-  <button class="back" onclick="showMenu()">← メニューへ戻る</button>
-  <div class="card hero">
+
+<section id="use" class="section">
+  <button class="backBtn" type="button" onclick="showMenu()">← メニューへ戻る</button>
+
+  <div class="panel">
     <h2>消耗品を使用</h2>
-    QRコードから開いた場合は消耗品が自動選択されます
+    <p>QRコードから開いた場合は消耗品が自動選択されます</p>
   </div>
-  <div class="card">
+
+  <div class="panel">
     <label>消耗品名</label>
     <select id="consumable"></select>
 
@@ -182,33 +677,53 @@ input,select{
     <label>日付</label>
     <input id="usedDate" type="date">
 
-    <button class="action" onclick="registerUse()">使用登録</button>
+    <button class="action" type="button" onclick="registerUse()">使用登録</button>
   </div>
 </section>
 
-<section id="history" class="hide">
-  <button class="back" onclick="showMenu()">← メニューへ戻る</button>
-  <div class="card">
+
+<section id="history" class="section">
+  <button class="backBtn" type="button" onclick="showMenu()">← メニューへ戻る</button>
+  <div class="panel">
     <h2>使用履歴</h2>
     <div id="historyList">読み込み中...</div>
   </div>
 </section>
 
-<section id="project" class="hide">
-  <button class="back" onclick="showMenu()">← メニューへ戻る</button>
-  <div class="card">
+
+<section id="project" class="section">
+  <button class="backBtn" type="button" onclick="showMenu()">← メニューへ戻る</button>
+
+  <div class="panel">
     <h2>案件別使用量</h2>
+
     <label>案件番号</label>
     <input id="projectSearch" list="projectList2" placeholder="案件番号を入力または選択">
     <datalist id="projectList2"></datalist>
-    <button class="action" onclick="loadProjectUsage()">表示する</button>
+
+    <button class="action" type="button" onclick="loadProjectUsage()">表示する</button>
   </div>
-  <div class="card">
+
+  <div class="panel">
     <div id="projectResult" class="empty">案件番号を選択してください</div>
   </div>
 </section>
 
+</main>
 </div>
+
+<nav class="bottomNav">
+  <button id="navHome" class="navBtn active" type="button" onclick="showMenu()">
+    <span class="navIcon">⌂</span>ホーム
+  </button>
+  <button id="navHistory" class="navBtn" type="button" onclick="openHistory()">
+    <span class="navIcon">↶</span>使用履歴
+  </button>
+  <button id="navProject" class="navBtn" type="button" onclick="openProject()">
+    <span class="navIcon">▥</span>案件別使用量
+  </button>
+</nav>
+
 
 <script>
 const db = supabase.createClient(
@@ -216,7 +731,12 @@ const db = supabase.createClient(
   'sb_publishable_slgq-RHBmjyF2TEys4j0fg_0t5YLSAA'
 );
 
-let consumables = [];
+let consumables=[];
+
+function setActiveNav(id){
+  ['navHome','navHistory','navProject'].forEach(x=>document.getElementById(x).classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
 function getUser(){
   let name=localStorage.getItem('ambi_consumable_user');
@@ -234,32 +754,79 @@ function getUser(){
 function changeUser(){
   const current=localStorage.getItem('ambi_consumable_user')||'';
   const name=prompt('使用者名を入力してください',current);
-  if(!name||!name.trim()) return;
+  if(!name||!name.trim())return;
   localStorage.setItem('ambi_consumable_user',name.trim());
   document.getElementById('userName').textContent=name.trim();
 }
 
 function hideAll(){
-  ['menu','use','history','project'].forEach(id=>document.getElementById(id).classList.add('hide'));
+  ['menu','use','history','project'].forEach(id=>document.getElementById(id).classList.remove('active'));
 }
-function showMenu(){hideAll();document.getElementById('menu').classList.remove('hide')}
-function openUse(){hideAll();document.getElementById('use').classList.remove('hide')}
-async function openHistory(){hideAll();document.getElementById('history').classList.remove('hide');await loadHistory()}
-async function openProject(){hideAll();document.getElementById('project').classList.remove('hide');await loadProjects()}
+
+function showMenu(){
+  hideAll();
+  document.getElementById('menu').classList.add('active');
+  setActiveNav('navHome');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function openUse(){
+  hideAll();
+  document.getElementById('use').classList.add('active');
+  setActiveNav('navHome');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+async function openHistory(){
+  hideAll();
+  document.getElementById('history').classList.add('active');
+  setActiveNav('navHistory');
+  window.scrollTo({top:0,behavior:'smooth'});
+  await loadHistory();
+}
+
+async function openProject(){
+  hideAll();
+  document.getElementById('project').classList.add('active');
+  setActiveNav('navProject');
+  window.scrollTo({top:0,behavior:'smooth'});
+  await loadProjects();
+}
 
 async function loadConsumables(){
-  const {data,error}=await db.from('consumables').select('*').eq('active',true).order('category').order('name');
-  if(error){alert('消耗品の読み込みに失敗しました\n'+error.message);return}
+  const {data,error}=await db
+    .from('consumables')
+    .select('*')
+    .eq('active',true)
+    .order('category')
+    .order('name');
+
+  if(error){
+    alert('消耗品の読み込みに失敗しました\n'+error.message);
+    return;
+  }
+
   consumables=data||[];
   const select=document.getElementById('consumable');
   select.innerHTML='<option value="">選択してください</option>';
+
   consumables.forEach(c=>{
-    const o=document.createElement('option');o.value=c.id;o.textContent=c.name;select.appendChild(o);
+    const o=document.createElement('option');
+    o.value=c.id;
+    o.textContent=c.name;
+    select.appendChild(o);
   });
+
   select.onchange=showUnit;
+
   const params=new URLSearchParams(location.search);
   const itemId=params.get('item');
-  if(itemId){select.value=itemId;showUnit();openUse()}
+
+  if(itemId){
+    select.value=itemId;
+    showUnit();
+    openUse();
+  }
 }
 
 function showUnit(){
@@ -269,11 +836,20 @@ function showUnit(){
 }
 
 async function loadProjects(){
-  const {data,error}=await db.from('consumable_projects').select('*').order('last_used_at',{ascending:false});
+  const {data,error}=await db
+    .from('consumable_projects')
+    .select('*')
+    .order('last_used_at',{ascending:false});
+
   if(error)return;
+
   [document.getElementById('projectList'),document.getElementById('projectList2')].forEach(list=>{
     list.innerHTML='';
-    (data||[]).forEach(p=>{const o=document.createElement('option');o.value=p.project_number;list.appendChild(o)});
+    (data||[]).forEach(p=>{
+      const o=document.createElement('option');
+      o.value=p.project_number;
+      list.appendChild(o);
+    });
   });
 }
 
@@ -290,14 +866,27 @@ async function registerUse(){
   if(!project){alert('案件番号を入力してください');return}
   if(!date){alert('日付を入力してください');return}
 
-  const {error}=await db.from('consumable_usage').insert({
-    user_name:user,consumable_id:consumableId,quantity,project_number:project,used_date:date
-  });
-  if(error){alert('登録に失敗しました\n'+error.message);return}
+  const {error}=await db
+    .from('consumable_usage')
+    .insert({
+      user_name:user,
+      consumable_id:consumableId,
+      quantity:quantity,
+      project_number:project,
+      used_date:date
+    });
 
-  await db.from('consumable_projects').upsert({
-    project_number:project,last_used_at:new Date().toISOString()
-  },{onConflict:'project_number'});
+  if(error){
+    alert('登録に失敗しました\n'+error.message);
+    return;
+  }
+
+  await db
+    .from('consumable_projects')
+    .upsert({
+      project_number:project,
+      last_used_at:new Date().toISOString()
+    },{onConflict:'project_number'});
 
   alert('登録しました！');
   document.getElementById('quantity').value='';
@@ -308,31 +897,60 @@ async function loadHistory(){
   const box=document.getElementById('historyList');
   box.textContent='読み込み中...';
 
-  const {data,error}=await db.from('consumable_usage').select(`
-    id,user_name,quantity,project_number,used_date,created_at,
-    consumables(name,unit)
-  `).order('created_at',{ascending:false}).limit(200);
+  const {data,error}=await db
+    .from('consumable_usage')
+    .select(`
+      id,
+      user_name,
+      quantity,
+      project_number,
+      used_date,
+      created_at,
+      consumables(name,unit)
+    `)
+    .order('created_at',{ascending:false})
+    .limit(200);
 
-  if(error){box.textContent='履歴の読み込みに失敗しました';return}
-  if(!data||!data.length){box.innerHTML='<div class="empty">まだ使用履歴はありません</div>';return}
+  if(error){
+    box.textContent='履歴の読み込みに失敗しました';
+    return;
+  }
+
+  if(!data||!data.length){
+    box.innerHTML='<div class="empty">まだ使用履歴はありません</div>';
+    return;
+  }
 
   box.innerHTML='';
+
   data.forEach(r=>{
-    const row=document.createElement('div');row.className='row';
+    const row=document.createElement('div');
+    row.className='row';
+
     row.innerHTML=
       '<div class="itemName">'+escapeHtml(r.consumables?.name||'不明')+'</div>'+
       '<div class="total">'+escapeHtml(r.quantity)+' '+escapeHtml(r.consumables?.unit||'')+'</div><br>'+
       '<span class="tag">'+escapeHtml(r.project_number)+'</span> '+escapeHtml(r.used_date)+
       '<br><small>使用者：'+escapeHtml(r.user_name)+'</small><br>'+
-      '<button class="deleteBtn" onclick="deleteUsage('+Number(r.id)+')">🗑 間違い登録を削除</button>';
+      '<button class="deleteBtn" type="button" onclick="deleteUsage('+Number(r.id)+')">🗑 間違い登録を削除</button>';
+
     box.appendChild(row);
   });
 }
 
 async function deleteUsage(id){
   if(!confirm('この使用履歴を削除しますか？\n\n間違い登録の場合のみ削除してください。'))return;
-  const {error}=await db.from('consumable_usage').delete().eq('id',id);
-  if(error){alert('削除に失敗しました\n'+error.message);return}
+
+  const {error}=await db
+    .from('consumable_usage')
+    .delete()
+    .eq('id',id);
+
+  if(error){
+    alert('削除に失敗しました\n'+error.message);
+    return;
+  }
+
   alert('削除しました');
   await loadHistory();
 }
@@ -340,46 +958,81 @@ async function deleteUsage(id){
 async function loadProjectUsage(){
   const project=document.getElementById('projectSearch').value.trim();
   const box=document.getElementById('projectResult');
-  if(!project){alert('案件番号を入力してください');return}
+
+  if(!project){
+    alert('案件番号を入力してください');
+    return;
+  }
+
   box.textContent='集計中...';
 
-  const {data,error}=await db.from('consumable_usage').select(`
-    quantity,consumables(name,unit)
-  `).eq('project_number',project);
+  const {data,error}=await db
+    .from('consumable_usage')
+    .select(`
+      quantity,
+      consumables(name,unit)
+    `)
+    .eq('project_number',project);
 
-  if(error){box.textContent='読み込みに失敗しました';return}
-  if(!data||!data.length){box.innerHTML='<div class="empty">この案件の使用履歴はありません</div>';return}
+  if(error){
+    box.textContent='読み込みに失敗しました';
+    return;
+  }
+
+  if(!data||!data.length){
+    box.innerHTML='<div class="empty">この案件の使用履歴はありません</div>';
+    return;
+  }
 
   const totals={};
+
   data.forEach(r=>{
     const name=r.consumables?.name||'不明';
     const unit=r.consumables?.unit||'';
     const key=name+'|'+unit;
-    if(!totals[key])totals[key]={name,unit,quantity:0};
+
+    if(!totals[key]){
+      totals[key]={name,unit,quantity:0};
+    }
+
     totals[key].quantity+=Number(r.quantity);
   });
 
   box.innerHTML='<div class="projectTitle">案件：'+escapeHtml(project)+'</div>';
+
   Object.values(totals).forEach(t=>{
-    const row=document.createElement('div');row.className='row';
-    row.innerHTML='<div class="itemName">'+escapeHtml(t.name)+'</div>'+
-                  '<div class="total">'+escapeHtml(t.quantity)+' '+escapeHtml(t.unit)+'</div>';
+    const row=document.createElement('div');
+    row.className='row';
+    row.innerHTML=
+      '<div class="itemName">'+escapeHtml(t.name)+'</div>'+
+      '<div class="total">'+escapeHtml(t.quantity)+' '+escapeHtml(t.unit)+'</div>';
     box.appendChild(row);
   });
 }
 
 function escapeHtml(v){
-  return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'","&#39;");
+  return String(v??'')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
 }
 
 async function init(){
   getUser();
-  document.getElementById('usedDate').value=new Date().toISOString().slice(0,10);
+
+  const today=new Date();
+  const yyyy=today.getFullYear();
+  const mm=String(today.getMonth()+1).padStart(2,'0');
+  const dd=String(today.getDate()).padStart(2,'0');
+  document.getElementById('usedDate').value=`${yyyy}-${mm}-${dd}`;
+
   await loadConsumables();
   await loadProjects();
 }
+
 init();
 </script>
-
 </body>
 </html>
