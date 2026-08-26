@@ -592,6 +592,149 @@ body::before{
   box-shadow:none !important;
 }
 
+
+/* ===== LOCKED FINAL REFERENCE DESIGN ===== */
+body{
+  background:
+    radial-gradient(ellipse at 82% 15%,rgba(0,77,190,.18) 0%,rgba(0,42,105,.08) 27%,transparent 48%),
+    linear-gradient(180deg,#020817 0%,#020713 52%,#01050d 100%) !important;
+}
+
+header{
+  position:relative !important;
+  overflow:visible !important;
+  background:transparent !important;
+}
+
+header::after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  pointer-events:none;
+  width:95%;
+  height:230px;
+  right:-24%;
+  top:55px;
+  transform:rotate(-12deg);
+  background:
+    linear-gradient(170deg,
+      transparent 0 40%,
+      rgba(0,68,255,.03) 41%,
+      rgba(0,98,255,.25) 43%,
+      rgba(0,125,255,.68) 44.2%,
+      rgba(77,227,255,.98) 45%,
+      rgba(0,128,255,.72) 45.8%,
+      rgba(0,77,255,.18) 47.3%,
+      transparent 49.5% 100%),
+    linear-gradient(173deg,
+      transparent 0 51%,
+      rgba(0,84,255,.06) 52%,
+      rgba(0,113,255,.34) 53.4%,
+      rgba(28,190,255,.85) 54.2%,
+      rgba(0,102,255,.30) 55.2%,
+      transparent 57% 100%),
+    linear-gradient(166deg,
+      transparent 0 62%,
+      rgba(0,90,255,.05) 63%,
+      rgba(0,110,255,.28) 64.4%,
+      rgba(0,173,255,.72) 65.2%,
+      transparent 67.2% 100%);
+  filter:
+    drop-shadow(0 0 5px rgba(31,184,255,.95))
+    drop-shadow(0 0 15px rgba(0,100,255,.60))
+    drop-shadow(0 0 28px rgba(0,77,255,.34));
+}
+
+.logo{
+  width:190px !important;
+  max-width:52vw !important;
+  background:transparent !important;
+  border:0 !important;
+  box-shadow:none !important;
+  filter:drop-shadow(0 0 5px rgba(0,83,255,.08)) !important;
+}
+
+.title{
+  margin-top:12px !important;
+  font-size:34px !important;
+}
+
+.subtitle{
+  color:#167aff !important;
+  letter-spacing:1.6px !important;
+}
+
+.userCard{
+  min-height:88px !important;
+  margin-top:22px !important;
+  border-radius:18px !important;
+  background:rgba(3,13,27,.91) !important;
+  border:1px solid rgba(9,83,172,.88) !important;
+}
+
+.userIcon{
+  color:#0877ff !important;
+  background:radial-gradient(circle,#0b3872 0%,#061c40 72%) !important;
+  border-color:#0a61c7 !important;
+}
+
+.nameBtn{
+  border-color:#0874ff !important;
+  color:#a7ceff !important;
+  background:rgba(4,18,38,.92) !important;
+}
+
+.menuCard{
+  min-height:145px !important;
+  border-radius:21px !important;
+  background:linear-gradient(135deg,rgba(5,20,39,.98),rgba(2,11,23,.99)) !important;
+  border:1px solid rgba(6,84,181,.95) !important;
+  box-shadow:
+    inset 5px 0 0 #0877ff,
+    0 0 16px rgba(0,98,255,.08) !important;
+}
+
+.menuCard.primary{
+  background:
+    radial-gradient(circle at 23% 38%,rgba(0,99,255,.14),transparent 38%),
+    linear-gradient(135deg,rgba(10,45,89,.99),rgba(3,18,36,.99)) !important;
+  border-color:#0879ff !important;
+  box-shadow:
+    inset 5px 0 0 #ffd51f,
+    0 0 18px rgba(0,107,255,.12) !important;
+}
+
+.iconBox{
+  background:linear-gradient(145deg,#0d3d78,#082653) !important;
+  border-color:#0968d3 !important;
+}
+
+.primary .iconBox{
+  background:linear-gradient(145deg,#ffe14c,#ffc414) !important;
+}
+
+.chev{color:#0878ff !important}
+.primary .chev{color:#ffd51f !important}
+
+.notice{
+  background:rgba(3,13,26,.92) !important;
+  border-color:rgba(7,77,159,.88) !important;
+}
+
+.bottomNav{
+  background:linear-gradient(180deg,rgba(2,15,33,.97),rgba(1,8,18,.995)) !important;
+  border-top:1px solid #075dbb !important;
+}
+
+@media (max-width:480px){
+  header::after{
+    width:115%;
+    right:-43%;
+    top:48px;
+    height:220px;
+  }
+}
+
 </style>
 </head>
 
